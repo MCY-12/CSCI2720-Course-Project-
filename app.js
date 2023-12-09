@@ -25,6 +25,8 @@ const venueSchema = new mongoose.Schema({
   longitude: String,
 });
 
+// Create a text index on the venueNameE field
+venueSchema.index({ venueNameE: 'text' });
 const Venue = mongoose.model('Venue', venueSchema);
 
 // Event Schema
@@ -43,10 +45,10 @@ const Event = mongoose.model('Event', eventSchema);
 
 const userSchema = new mongoose.Schema({
   username: String,
-  password: String, // Consider using hashing for storing passwords
+  password: String,
   email: String,
   isAdmin: Boolean,
-  // Add other relevant fields
+  favorites: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Show' }] // Array of venue IDs
 });
 
 const User = mongoose.model('User', userSchema);
@@ -164,6 +166,7 @@ app.use(session({
 
 app.use(express.static(__dirname + '/front-end/public'));
 
+// Endpoint to list all locations in a table format, including functionality for sorting by the number of events at each venue.
 app.get('/locations', async (req, res) => {
   try {
     // Determine sorting order based on query parameter, default is ascending
@@ -193,6 +196,114 @@ app.get('/locations', async (req, res) => {
   }
 });
 
+// Endpoint to search for locations by keywords in the name.
+app.get('/search-venues', async (req, res) => {
+  try {
+    const searchTerm = req.query.keyword;
+    const searchResult = await Venue.find({ $text: { $search: searchTerm } });
+    
+    res.status(200).json(searchResult);
+  } catch (error) {
+    console.error('Error searching venues:', error);
+    res.status(500).send('Error searching venues');
+  }
+});
+
+// Endpoint to provide detailed view for a single location, including map integration, location details, and user comments functionality.
+app.get('/location/:venueId', async (req, res) => {
+  try {
+    const venueId = req.params.venueId;
+    // Fetch venue details
+    const venue = await Show.findOne({ venueId });
+    if (!venue) {
+      return res.status(404).send('Venue not found');
+    }
+
+    // Fetch associated events
+    const events = await ShowEvent.find({ venueId });
+
+    // Fetch comments for the venue
+    const comments = await Comment.find({ event: { $in: events.map(event => event._id) } }).populate('user', 'username');
+
+    // Prepare data for the client
+    const locationData = {
+      venue,
+      events,
+      comments,
+      mapUrl: `https://www.google.com/maps/search/?api=1&query=${venue.latitude},${venue.longitude}`
+    };
+
+    res.json(locationData);
+  } catch (error) {
+    console.error('Error fetching location details:', error);
+    res.status(500).send('Error fetching location details');
+  }
+});
+
+// Endpoints for adding locations to a user's list of favorite locations and viewing this list.
+app.post('/user/favorites/:venueId', async (req, res) => {
+  try {
+    const userId = req.session.user.id; // Assuming user ID is stored in session
+    const venueId = req.params.venueId;
+    
+    // Check if venue exists
+    const venueExists = await Show.exists({ venueId });
+    if (!venueExists) {
+      return res.status(404).json({ message: 'Venue not found' });
+    }
+
+    // Add to user's favorites
+    const updatedUser = await User.findByIdAndUpdate(
+      userId, 
+      { $addToSet: { favorites: venueId } }, 
+      { new: true }
+    );
+
+    res.json({ message: 'Added to favorites', favorites: updatedUser.favorites });
+  } catch (error) {
+    res.status(500).json({ message: 'Error adding favorite', error: error.message });
+  }
+});
+
+// Unfavorite locations
+app.delete('/user/favorites/:venueId', async (req, res) => {
+  try {
+    const userId = req.session.user.id; // Assuming user ID is stored in session
+    const venueId = req.params.venueId;
+
+    // Remove from user's favorites
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { $pull: { favorites: venueId } }, // Pulls the venueId from the favorites array
+      { new: true }
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.json({ message: 'Removed from favorites', favorites: updatedUser.favorites });
+  } catch (error) {
+    res.status(500).json({ message: 'Error removing favorite', error: error.message });
+  }
+});
+
+
+// View favorite locations
+app.get('/user/favorites', async (req, res) => {
+  try {
+    const userId = req.session.user.id;
+    
+    const user = await User.findById(userId).populate('favorites');
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.json({ favorites: user.favorites });
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching favorites', error: error.message });
+  }
+});
 
 // User login
 app.post('/login', async (req, res) => {
