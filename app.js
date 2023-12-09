@@ -305,6 +305,22 @@ app.get('/user/favorites', async (req, res) => {
   }
 });
 
+// Endpoint to list events filtered by price criteria (e.g., events with price ≤100).
+app.get('/events/price/:maxPrice', async (req, res) => {
+  try {
+    const maxPrice = parseInt(req.params.maxPrice);
+
+    // Filter events where price is less than or equal to maxPrice
+    const events = await Event.find({ 
+      price: { $lte: maxPrice }
+    });
+
+    res.json(events);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching events', error: error.message });
+  }
+});
+
 // User login
 app.post('/login', async (req, res) => {
   try {
@@ -480,9 +496,11 @@ app.delete('/admin/show/:showId', isAdmin, async (req, res) => {
   }
 });
 
+// User logout
 app.get('/logout', (req, res) => {
-  req.session.destroy();
-  res.redirect('/login'); // Redirect to login page
+  req.session.destroy(() => {
+    res.redirect('/login'); // Redirect to login page after session is destroyed
+  });
 });
 
 // Start the server
