@@ -1,170 +1,149 @@
-// Import required libraries and modules
 const express = require('express');
-const mysql = require('mongoose');
+const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const session = require('express-session');
-// const http = require('http');
-// const socketIO = require('socket.io');
-
-// Define constants
+const axios = require('axios');
+const xml2js = require('xml2js');
 const app = express();
 const port = 3000;
-const server = http.createServer(app);
+const parser = new xml2js.Parser();
 
 // MongoDB connection setup
-mongoose.connect('mongodb://localhost:27017/dataBaseName', { useNewUrlParser: true, useUnifiedTopology: true });
+mongoose.connect('mongodb://localhost:27017/CSCI2720');
 mongoose.connection.on('error', console.error.bind(console, 'MongoDB connection error:'));
-
-// Set up middleware
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json());
-
-// Configure session middleware
-app.use(
-session({
-  secret: 'oWM8NSYYQjhq4j',
-  resave: false,
-  saveUninitialized: true,
+mongoose.connection.once('open', function() {
+  console.log("Connection is opne...");
 })
-);
 
-// Serve static files from the 'public' directory
-app.use(express.static(__dirname + '/public'));
-
-// Define the root route to serve the login page
-app.get('/', (req, res) => {
-res.sendFile(__dirname + '/public' + '/login.html');
+// Venue Schema
+const venueSchema = new mongoose.Schema({
+  venueId: Number,
+  venueNameE: String,
+  latitude: String,
+  longitude: String,
 });
 
-// Define the login route to handle user authentication
-app.post('/login', (req, res) => {
-// Get the submitted username and password from the request body
-const { username, password } = req.body;
+const Venue = mongoose.model('Venue', venueSchema);
 
-// Define the SQL query to fetch user data based on the provided username and password
-const query = 'SELECT * FROM users WHERE username = ? AND password = ?';
-db.query(query, [username, password], (err, result) => {
-  if (err) throw err;
-
-  // Check if the provided credentials match a user in the database
-  if (result.length > 0) {
-    // Set the session user data
-    req.session.user = {
-      username: result[0].username,
-      isAdmin: result[0].is_admin,
-    };
-    // Send a JSON response with a success message and a redirection URL
-    res.json({ message: 'Login successful', redirectTo: result[0].is_admin ? '/admin' : '/main' });
-  } else {
-    // Send a JSON response with an error message
-    res.json({ message: 'Incorrect username or password' });
-  }
-});
+// Event Schema
+const eventSchema = new mongoose.Schema({
+  eventId: Number,
+  titleE: String,
+  venueId: Number,  // to associate with Venue
+  date: String,
+  progtimeE: String,
+  agelimitE: String,
+  urlE: String,
+  remarkE: String,
+  enquiry: String,
+  email: String,
+  saledate: String,
+  descriptionE: String,
+  presenterE: String,
+  price: String,
+  // Include other relevant fields if necessary
 });
 
-// Define the registration route to handle user registration
-app.post('/register', (req, res) => {
-// Get the submitted username and password from the request body
-const { username, password } = req.body;
+const Event = mongoose.model('Event', eventSchema);
 
-// Define the SQL query to check if the provided username already exists in the database
-const checkUserQuery = 'SELECT * FROM users WHERE username = ?';
-db.query(checkUserQuery, [username], (err, result) => {
-  if (err) {
-    console.error(err);
-    res.status(500).json({ message: 'An error occurred while checking the username' });
-    return;
-  }
-
-  // Check if the provided username is already taken
-  if (result.length > 0) {
-    res.json({ message: 'Username is already taken' });
-  } else {
-    // Define the SQL query to insert the new user into the database
-    const createUserQuery = 'INSERT INTO users (username, password) VALUES (?, ?)';
-    db.query(createUserQuery, [username, password], (err, result) => {
-      if (err) {
-        console.error(err);
-        res.status(500).json({ message: 'An error occurred while creating the user' });
-        return;
-      }
-
-      // Send a JSON response with a success message
-      res.json({ message: 'User registered successfully!' });
-    });
-  }
-});
+const userSchema = new mongoose.Schema({
+  username: String,
+  password: String, // Consider using hashing for storing passwords
+  email: String,
+  isAdmin: Boolean,
+  // Add other relevant fields
 });
 
-// Define the main route to serve the game board HTML file
-app.get('/main', (req, res) => {
-res.sendFile(__dirname + '/public' + '/gameboard.html');
+const User = mongoose.model('User', userSchema);
+
+const commentSchema = new mongoose.Schema({
+  content: String,
+  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  event: { type: mongoose.Schema.Types.ObjectId, ref: 'Event' },
+  postedAt: { type: Date, default: Date.now },
+  // Add other relevant fields
 });
 
-// Define the logout route to destroy the user session and redirect to the login page
-app.get('/logout', (req, res) => {
-req.session.destroy();
-res.redirect('/');
-});
+const Comment = mongoose.model('Comment', commentSchema);
 
-// Define the isAdmin middleware function to check if a user is an admin
-function isAdmin(req, res, next) {
-  const userIsAdmin = req.session && req.session.user && req.session.user.isAdmin;
 
-  if (userIsAdmin) {
-    next(); // Continue to the next middleware or route handler
-  } else {
-    res.status(403).send('Access denied'); // Return a 403 Forbidden status if the user is not an admin
-  }
+// Function to fetch and process venue data
+async function processVenueData() {
+  const venueResponse = await axios.get('https://www.lcsd.gov.hk/datagovhk/event/venues.xml');
+  const venueXml = await parser.parseStringPromise(venueResponse.data);
+
+  const processedVenues = venueXml.venues.venue.map(v => ({
+    venueId: parseInt(v.$.id),
+    venueNameE: v.venuee[0].trim(),
+    latitude: v.latitude[0].trim(),
+    longitude: v.longitude[0].trim(),
+  }));
+
+  // Save processed venues to MongoDB
+  Venue.insertMany(processedVenues)
+  .then(docs => {
+    console.log("Venues saved successfully");
+  })
+  .catch(err => {
+    console.error("Error saving venues:", err);
+  });
 }
 
-// Define the admin route to serve the admin panel HTML file, protected by the isAdmin middleware
-app.get('/admin', isAdmin, (req, res) => {
-  res.sendFile(__dirname + '/public' + '/admin.html');
-});
+// Function to fetch and process event data
+async function processEventData() {
+  const eventResponse = await axios.get('https://www.lcsd.gov.hk/datagovhk/event/events.xml');
+  const eventXml = await parser.parseStringPromise(eventResponse.data);
 
-// Define the route to get all users, protected by the isAdmin middleware
-app.get('/admin/users', isAdmin, (req, res) => {
-  const query = 'SELECT * FROM users';
-  db.query(query, (err, results) => {
-    if (err) {
-      console.error(err);
-      res.status(500).send('Error fetching users');
-      return;
-    }
-    res.json(results); // Return the fetched users as JSON
+  const processedEvents = eventXml.events.event.map(e => ({
+    eventId: parseInt(e.$.id),
+    titleE: e.titlee[0].trim(),
+    venueId: parseInt(e.venueid[0].trim()),
+    date: e.predateE[0].trim(),
+    progtimeE: e.progtimee[0].trim(),
+    agelimitE: e.agelimite[0].trim(),
+    urlE: e.urle[0].trim(),
+    remarkE: e.remarke[0].trim(),
+    enquiry: e.enquiry[0].trim(),
+    email: e.email[0].trim(),
+    saledate: e.saledate[0].trim(),
+    descriptionE: e.desce[0].trim() || '',
+    presenterE: e.presenterorge[0].trim(),
+    price: e.pricee[0].trim(),
+  }));
+
+  // Save processed events to MongoDB
+  Event.insertMany(processedEvents)
+  .then(docs => {
+    console.log("Events saved successfully");
+  })
+  .catch(err => {
+    console.error("Error saving events:", err);
   });
+}
+
+// endpoint to trigger data processing
+app.get('/update-data', async (req, res) => {
+  await processVenueData();
+  await processEventData();
+  res.send('Data updated successfully');
 });
 
-// Define the route to get game records for a specific user, protected by the isAdmin middleware
-app.get('/admin/game-records/:username', isAdmin, (req, res) => {
-  const { username } = req.params;
-  const query = 'SELECT * FROM game_records WHERE username = ?';
-  db.query(query, [username], (err, results) => {
-    if (err) {
-      console.error(err);
-      res.status(500).send('Error fetching game records');
-      return;
-    }
-    res.json(results); // Return the fetched game records as JSON
-  });
-});
+// app.use(bodyParser.urlencoded({ extended: false }));
+// app.use(bodyParser.json());
+// app.use(session({ /* session configuration */ }));
+// app.use(express.static(__dirname + '/public'));
 
-// Define the route to delete a user, protected by the isAdmin middleware
-app.delete('/admin/delete-user/:username', isAdmin, (req, res) => {
-  const { username } = req.params;
-  const query = 'DELETE FROM users WHERE username = ?';
-  db.query(query, [username], (err, results) => {
-    if (err) {
-      console.error(err);
-      res.status(500).send('Error deleting user');
-      return;
-    }
-    res.send('User deleted successfully'); // Send a success message
-  });
-});
+// // Define RESTful API endpoints here
+// // Example: app.get('/api/locations', (req, res) => { /* list locations */ });
 
-// Start the server and listen for incoming connections on the specified port
-server.listen(port, () => {
+// // User authentication routes
+// app.post('/login', (req, res) => { /* handle login */ });
+// app.post('/register', (req, res) => { /* handle registration */ });
+
+// // Admin-specific routes
+// app.get('/admin', isAdmin, (req, res) => { /* admin panel */ });
+
+// Start the server
+app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
