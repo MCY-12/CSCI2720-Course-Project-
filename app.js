@@ -7,6 +7,8 @@ const xml2js = require('xml2js');
 const app = express();
 const port = 3000;
 const parser = new xml2js.Parser();
+const bcrypt = require('bcrypt');
+const saltRounds = 10;
 
 // MongoDB connection setup
 mongoose.connect('mongodb://localhost:27017/CSCI2720');
@@ -31,13 +33,6 @@ const eventSchema = new mongoose.Schema({
   titleE: String,
   venueId: Number,  // to associate with Venue
   date: String,
-  progtimeE: String,
-  agelimitE: String,
-  urlE: String,
-  remarkE: String,
-  enquiry: String,
-  email: String,
-  saledate: String,
   descriptionE: String,
   presenterE: String,
   price: String,
@@ -99,13 +94,6 @@ async function processEventData() {
     titleE: e.titlee[0].trim(),
     venueId: parseInt(e.venueid[0].trim()),
     date: e.predateE[0].trim(),
-    progtimeE: e.progtimee[0].trim(),
-    agelimitE: e.agelimite[0].trim(),
-    urlE: e.urle[0].trim(),
-    remarkE: e.remarke[0].trim(),
-    enquiry: e.enquiry[0].trim(),
-    email: e.email[0].trim(),
-    saledate: e.saledate[0].trim(),
     descriptionE: e.desce[0].trim() || '',
     presenterE: e.presenterorge[0].trim(),
     price: e.pricee[0].trim(),
@@ -128,20 +116,188 @@ app.get('/update-data', async (req, res) => {
   res.send('Data updated successfully');
 });
 
-// app.use(bodyParser.urlencoded({ extended: false }));
-// app.use(bodyParser.json());
-// app.use(session({ /* session configuration */ }));
-// app.use(express.static(__dirname + '/public'));
+app.get('/process-venues', async (req, res) => {
+  try {
+    const venues = await Venue.aggregate([
+      { $match: { latitude: { $ne: '' }, longitude: { $ne: '' } } },
+      { $lookup: {
+          from: "events",
+          localField: "venueId",
+          foreignField: "venueId",
+          as: "events"
+        }
+      },
+      { $addFields: { eventCount: { $size: "$events" } } },
+      { $match: { eventCount: { $gte: 3 } } },
+      { $limit: 10 }
+    ]);
 
-// // Define RESTful API endpoints here
-// // Example: app.get('/api/locations', (req, res) => { /* list locations */ });
+    // Assuming Show uses the same schema as Venue
+    const Show = mongoose.model('Show', venueSchema);
 
-// // User authentication routes
-// app.post('/login', (req, res) => { /* handle login */ });
-// app.post('/register', (req, res) => { /* handle registration */ });
+    await Show.insertMany(venues);
+    res.send('Venues processed and saved successfully');
+  } catch (error) {
+    console.error('Error processing venues:', error);
+    res.status(500).send('Error processing venues');
+  }
+});
 
-// // Admin-specific routes
-// app.get('/admin', isAdmin, (req, res) => { /* admin panel */ });
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
+
+app.use(session({
+  secret: 'IKg4qePyQt',
+  resave: false,
+  saveUninitialized: true,
+  cookie: { secure: true } // use secure:true in production with HTTPS
+}));
+
+app.use(express.static(__dirname + '/public'));
+
+// Define RESTful API endpoints here
+// Example: app.get('/api/locations', (req, res) => { /* list locations */ });
+
+// User login
+app.post('/login', async (req, res) => {
+  try {
+    const user = await User.findOne({ username: req.body.username });
+    if (!user) {
+      return res.status(401).json({ message: 'Authentication failed' });
+    }
+    
+    const match = await bcrypt.compare(req.body.password, user.password);
+    if (match) {
+      req.session.user = { id: user._id, username: user.username }; // Store user info in session
+      res.json({ message: 'Login successful', user: req.session.user });
+    } else {
+      res.status(401).json({ message: 'Authentication failed' });
+    }
+  } catch (error) {
+    res.status(500).json({ message: 'Error in login process', error: error.message });
+  }
+});
+
+// User Register
+app.post('/register', async (req, res) => {
+  try {
+    const { username, email } = req.body;
+    const hashedPassword = await bcrypt.hash(req.body.password, saltRounds);
+    const newUser = new User({
+      username,
+      password: hashedPassword,
+      email,
+      isAdmin: false
+    });
+
+    await newUser.save();
+    res.status(200).json({ message: 'User registered successfully!' });
+  } catch (error) {
+    res.status(500).json({ message: 'Error in registration process', error: error.message });
+  }
+});
+
+//Check admin permission
+function isAdmin(req, res, next) {
+  if (req.session.user && req.session.user.isAdmin) {
+    next();
+  } else {
+    res.status(403).send('Access Denied');
+  }
+}
+
+// Admin-specific routes
+app.get('/admin', isAdmin, (req, res) => {
+  res.sendFile(path.join(__dirname, 'write the path to the admin panel or index html then render the admin panel'));
+});
+
+// CREATE Event
+app.post('/admin/event', isAdmin, async (req, res) => {
+  try {
+    const newEvent = new Event(req.body);
+    await newEvent.save();
+    res.status(200).json({ message: 'Event created successfully', event: newEvent });
+  } catch (error) {
+    res.status(500).json({ message: 'Error creating event', error: error.message });
+  }
+});
+
+// READ Events
+app.get('/admin/events', isAdmin, async (req, res) => {
+  try {
+    const events = await Event.find({});
+    res.status(200).json(events);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching events', error: error.message });
+  }
+});
+
+// UPDATE Event
+app.put('/admin/event/:eventId', isAdmin, async (req, res) => {
+  try {
+    const updatedEvent = await Event.findByIdAndUpdate(req.params.eventId, req.body, { new: true });
+    res.status(200).json({ message: 'Event updated successfully', event: updatedEvent });
+  } catch (error) {
+    res.status(500).json({ message: 'Error updating event', error: error.message });
+  }
+});
+
+// DELETE Event
+app.delete('/admin/event/:eventId', isAdmin, async (req, res) => {
+  try {
+    await Event.findByIdAndDelete(req.params.eventId);
+    res.status(200).json({ message: 'Event deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Error deleting event', error: error.message });
+  }
+});
+
+// CREATE User
+app.post('/admin/user', isAdmin, async (req, res) => {
+  try {
+    const hashedPassword = await bcrypt.hash(req.body.password, saltRounds);
+    const newUser = new User({ ...req.body, password: hashedPassword });
+    await newUser.save();
+    res.status(200).json({ message: 'User created successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Error creating user', error: error.message });
+  }
+});
+
+// READ Users
+app.get('/admin/users', isAdmin, async (req, res) => {
+  try {
+    const users = await User.find({});
+    res.status(200).json(users);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching users', error: error.message });
+  }
+});
+
+// UPDATE User
+app.put('/admin/user/:userId', isAdmin, async (req, res) => {
+  try {
+    const updatedUser = await User.findByIdAndUpdate(req.params.userId, req.body, { new: true });
+    res.status(200).json({ message: 'User updated successfully', user: updatedUser });
+  } catch (error) {
+    res.status(500).json({ message: 'Error updating user', error: error.message });
+  }
+});
+
+// DELETE User
+app.delete('/admin/user/:userId', isAdmin, async (req, res) => {
+  try {
+    await User.findByIdAndDelete(req.params.userId);
+    res.status(200).json({ message: 'User deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Error deleting user', error: error.message });
+  }
+});
+
+app.get('/logout', (req, res) => {
+  req.session.destroy();
+  res.redirect('/login'); // Redirect to login page
+});
 
 // Start the server
 app.listen(port, () => {
