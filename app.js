@@ -118,6 +118,7 @@ app.get('/update-data', async (req, res) => {
 
 app.get('/process-venues', async (req, res) => {
   try {
+    // Aggregate venues with non-empty latitude and longitude, and at least 3 events
     const venues = await Venue.aggregate([
       { $match: { latitude: { $ne: '' }, longitude: { $ne: '' } } },
       { $lookup: {
@@ -132,14 +133,24 @@ app.get('/process-venues', async (req, res) => {
       { $limit: 10 }
     ]);
 
-    // Assuming Show uses the same schema as Venue
+    // Create or use the Show collection
     const Show = mongoose.model('Show', venueSchema);
 
+    // Insert the venues into the Show collection
     await Show.insertMany(venues);
-    res.send('Venues processed and saved successfully');
+
+    // For each venue, find and store its events
+    for (const venue of venues) {
+      const events = await Event.find({ venueId: venue.venueId });
+      // Create a new collection or use an existing one for storing events
+      const ShowEvent = mongoose.model('ShowEvent', eventSchema);
+      await ShowEvent.insertMany(events);
+    }
+
+    res.send('Venues and events processed and saved successfully');
   } catch (error) {
-    console.error('Error processing venues:', error);
-    res.status(500).send('Error processing venues');
+    console.error('Error processing venues and events:', error);
+    res.status(500).send('Error processing venues and events');
   }
 });
 
@@ -154,9 +165,6 @@ app.use(session({
 }));
 
 app.use(express.static(__dirname + '/public'));
-
-// Define RESTful API endpoints here
-// Example: app.get('/api/locations', (req, res) => { /* list locations */ });
 
 // User login
 app.post('/login', async (req, res) => {
@@ -212,46 +220,47 @@ app.get('/admin', isAdmin, (req, res) => {
 });
 
 // CREATE Event
-app.post('/admin/event', isAdmin, async (req, res) => {
+app.post('/admin/showevent', isAdmin, async (req, res) => {
   try {
-    const newEvent = new Event(req.body);
-    await newEvent.save();
-    res.status(200).json({ message: 'Event created successfully', event: newEvent });
+    const newShowEvent = new ShowEvent(req.body);
+    await newShowEvent.save();
+    res.status(200).json({ message: 'ShowEvent created successfully', showEvent: newShowEvent });
   } catch (error) {
-    res.status(500).json({ message: 'Error creating event', error: error.message });
+    res.status(500).json({ message: 'Error creating show event', error: error.message });
   }
 });
 
 // READ Events
-app.get('/admin/events', isAdmin, async (req, res) => {
+app.get('/admin/showevents', isAdmin, async (req, res) => {
   try {
-    const events = await Event.find({});
-    res.status(200).json(events);
+    const showEvents = await ShowEvent.find({});
+    res.status(200).json(showEvents);
   } catch (error) {
-    res.status(500).json({ message: 'Error fetching events', error: error.message });
+    res.status(500).json({ message: 'Error fetching show events', error: error.message });
   }
 });
 
 // UPDATE Event
-app.put('/admin/event/:eventId', isAdmin, async (req, res) => {
+app.put('/admin/showevent/:showEventId', isAdmin, async (req, res) => {
   try {
-    const updatedEvent = await Event.findByIdAndUpdate(req.params.eventId, req.body, { new: true });
-    res.status(200).json({ message: 'Event updated successfully', event: updatedEvent });
+    const updatedShowEvent = await ShowEvent.findByIdAndUpdate(req.params.showEventId, req.body, { new: true });
+    res.status(200).json({ message: 'ShowEvent updated successfully', showEvent: updatedShowEvent });
   } catch (error) {
-    res.status(500).json({ message: 'Error updating event', error: error.message });
+    res.status(500).json({ message: 'Error updating show event', error: error.message });
   }
 });
 
 // DELETE Event
-app.delete('/admin/event/:eventId', isAdmin, async (req, res) => {
+app.delete('/admin/showevent/:showEventId', isAdmin, async (req, res) => {
   try {
-    await Event.findByIdAndDelete(req.params.eventId);
-    res.status(200).json({ message: 'Event deleted successfully' });
+    await ShowEvent.findByIdAndDelete(req.params.showEventId);
+    res.status(200).json({ message: 'ShowEvent deleted successfully' });
   } catch (error) {
-    res.status(500).json({ message: 'Error deleting event', error: error.message });
+    res.status(500).json({ message: 'Error deleting show event', error: error.message });
   }
 });
 
+// CRUD User
 // CREATE User
 app.post('/admin/user', isAdmin, async (req, res) => {
   try {
@@ -291,6 +300,44 @@ app.delete('/admin/user/:userId', isAdmin, async (req, res) => {
     res.status(200).json({ message: 'User deleted successfully' });
   } catch (error) {
     res.status(500).json({ message: 'Error deleting user', error: error.message });
+  }
+});
+
+// Venuen CRUD
+app.post('/admin/show', isAdmin, async (req, res) => {
+  try {
+    const newShow = new Show(req.body);
+    await newShow.save();
+    res.status(200).json({ message: 'Show created successfully', show: newShow });
+  } catch (error) {
+    res.status(500).json({ message: 'Error creating show', error: error.message });
+  }
+});
+
+app.get('/admin/shows', isAdmin, async (req, res) => {
+  try {
+    const shows = await Show.find({});
+    res.status(200).json(shows);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching shows', error: error.message });
+  }
+});
+
+app.put('/admin/show/:showId', isAdmin, async (req, res) => {
+  try {
+    const updatedShow = await Show.findByIdAndUpdate(req.params.showId, req.body, { new: true });
+    res.status(200).json({ message: 'Show updated successfully', show: updatedShow });
+  } catch (error) {
+    res.status(500).json({ message: 'Error updating show', error: error.message });
+  }
+});
+
+app.delete('/admin/show/:showId', isAdmin, async (req, res) => {
+  try {
+    await Show.findByIdAndDelete(req.params.showId);
+    res.status(200).json({ message: 'Show deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Error deleting show', error: error.message });
   }
 });
 
