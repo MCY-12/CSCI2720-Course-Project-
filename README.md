@@ -26,8 +26,8 @@ npm start
 
 To set up the back-end, run the following command in your terminal:
 
-   ```bash
-   cd back-end
+```bash
+cd back-end
 npm install
 node server.js
 ```
@@ -37,8 +37,10 @@ You can ignore this if you don't meet error.
 
 As I said in Whatsapp, it can be solved by changing localhost to 127.0.0.1 in server.js. However, here is the alternative way.
 
+At
+
 ```bash
-   cd C:\Program Files\MongoDB\Server\7.0\bin\mongod.cfg
+C:\Program Files\MongoDB\Server\7.0\bin\mongod.cfg
 ```
 
 Change
@@ -49,7 +51,7 @@ net:
   bindIp: 127.0.0.1
 ```
 
-to
+To
 
 ```bash
 net:
