@@ -162,7 +162,7 @@ app.use(session({
   cookie: { secure: true } // use secure:true in production with HTTPS
 }));
 
-app.use(express.static(__dirname + '/public'));
+app.use(express.static(__dirname + '/front-end/public'));
 
 app.get('/locations', async (req, res) => {
   try {
