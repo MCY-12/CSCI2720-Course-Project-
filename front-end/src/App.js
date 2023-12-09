@@ -2,10 +2,18 @@ import React from 'react';
 import { Navbar, Nav, NavDropdown, Offcanvas, Form, InputGroup, FormControl, Button, Container, Stack, Row, Col } from 'react-bootstrap';
 import { useState } from 'react';
 
+//import axios from 'axios';
+
 import './App.css';
+
+import EventManagement from './EventManagement';
+import UserManagement from './UserManagement';
+import Login from './login';
 
 import Dropdown from 'react-bootstrap/Dropdown';
 import DropdownButton from 'react-bootstrap/DropdownButton';
+
+
 
 //https://react-bootstrap.github.io/docs/getting-started/introduction
 //if you need help on how the react bootstrap code is written ^^
@@ -18,12 +26,55 @@ function App() {
 
   const [priceFilterTitle, setPriceFilterTitle] = useState("Under");
 
+
+  //by 1155174712
+  const [locationData, setLocationData] = useState([]); //not used
+  const [isLoggedIn, setIsLoggedIn] = useState(false); //set initial state based on user authentication)
+  const [isAdmin, setIsAdmin] = useState(false); //admin authentication)
+  
   const handlePriceFilterSelect = (eventKey) => {
     setPriceFilterTitle(eventKey);
+    //I don't have enough time to implement: fetch and display events based on the selected price filter
+
+
   };
-  /*
+
+  const handleLogout = () => {
+    setIsLoggedIn(false);
+    setIsAdmin(false);
+  };
+
+  // Render based on user authentication
+  const renderContent = () => {
+    if (isLoggedIn) {
+      if (isAdmin) {
+        return (
+          <div>
+            <EventManagement />
+            <UserManagement />
+          </div>
+        );
+      } else {
+        return (
+          <div>
+            <h1>User(Below done by James)</h1>
+          </div>
+        );
+      }
+    } else {
+      // Render login form for non-authenticated user
+      return (
+        <div>
+          <Login />
+        </div>
+      );
+    }
+  };
   
-  */
+
+ //after login. if user not admin then return this:
+
+  //should be logout instead of login, as user need auth. to view the content, when they see this page, they already login
   return (
     <div className="App">
       <Navbar bg="light" expand="lg">
@@ -32,7 +83,7 @@ function App() {
           <FormControl type="text" placeholder="Search" className="me-sm-2" />
         </Form>
         <Nav className="ml-auto">
-          <Button className="me-3" variant="outline-success">Login</Button>
+          <Button className="me-3" variant="outline-success" onClick={handleLogout}>Logout</Button>
         </Nav>
       </Navbar>
 
@@ -113,3 +164,4 @@ function App() {
 }
 
 export default App;
+
