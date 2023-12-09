@@ -61,6 +61,8 @@ const commentSchema = new mongoose.Schema({
 
 const Comment = mongoose.model('Comment', commentSchema);
 
+const Show = mongoose.model('Show', venueSchema);
+const ShowEvent = mongoose.model('ShowEvent', eventSchema);
 
 // Function to fetch and process venue data
 async function processVenueData() {
@@ -133,17 +135,13 @@ app.get('/process-venues', async (req, res) => {
       { $limit: 10 }
     ]);
 
-    // Create or use the Show collection
-    const Show = mongoose.model('Show', venueSchema);
-
     // Insert the venues into the Show collection
     await Show.insertMany(venues);
 
     // For each venue, find and store its events
     for (const venue of venues) {
       const events = await Event.find({ venueId: venue.venueId });
-      // Create a new collection or use an existing one for storing events
-      const ShowEvent = mongoose.model('ShowEvent', eventSchema);
+
       await ShowEvent.insertMany(events);
     }
 
@@ -165,6 +163,36 @@ app.use(session({
 }));
 
 app.use(express.static(__dirname + '/public'));
+
+app.get('/locations', async (req, res) => {
+  try {
+    // Determine sorting order based on query parameter, default is ascending
+    const sortOrder = req.query.sort === 'desc' ? -1 : 1;
+
+    const locations = await Show.aggregate([
+      {
+        $lookup: {
+          from: 'showevents',
+          localField: 'venueId',
+          foreignField: 'venueId',
+          as: 'events'
+        }
+      },
+      {
+        $addFields: { eventCount: { $size: '$events' } }
+      },
+      {
+        $sort: { eventCount: sortOrder }
+      }
+    ]);
+
+    res.status(200).json(locations);
+  } catch (error) {
+    console.error('Error fetching locations:', error);
+    res.status(500).send('Error fetching locations');
+  }
+});
+
 
 // User login
 app.post('/login', async (req, res) => {
