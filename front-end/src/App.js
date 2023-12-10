@@ -33,14 +33,20 @@ function App() {
   const [priceFilterTitle, setPriceFilterTitle] = useState("Under");
 
   //For Index offcanvas table number of events sort
-  const [indexData, setIndexData] = useState([
-    { location: 'Location 1', events: 3 },
-    { location: 'asdfgh', events: 4 },
-    { location: 'testing25 6969', events: 6 },
+  const [indexData, setIndexData] = useState([]);
+
+  //Fetch locations data to show in index table
+  useEffect(() => {
+    fetch('http://localhost:3001/locations')
+      .then(response => response.json())
+      .then(data => setIndexData(data))
+      .catch(error => console.error(error));
+  }, []);
     //data here..
     //backend people link this to your database somehow
-  ]);
-  const [indexNumberOfEventsSortConfig, setIndexNumberOfEventsSortConfig] = useState({ key: 'events', direction: 'ascending' });
+
+
+  const [indexNumberOfEventsSortConfig, setIndexNumberOfEventsSortConfig] = useState({ key: 'eventCount', direction: 'ascending' });
   const [indexSearchTerm, setIndexSearchTerm] = useState(''); 
 
   const sortedIndexData = [...indexData].sort((a, b) => {
@@ -54,7 +60,7 @@ function App() {
   });
 
   const filteredIndexData = sortedIndexData.filter(item => 
-    item.location.toLowerCase().includes(indexSearchTerm.toLowerCase()));
+    item.venueNameE.toLowerCase().includes(indexSearchTerm.toLowerCase()));
 
   const handleIndexNumberOfEventsSort = (key) => {
     let direction = 'ascending';
@@ -134,6 +140,10 @@ function App() {
 
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  useEffect(() => {
+    fetch('')
+  })
   
 
  //after login. if user not admin then return this:
@@ -184,8 +194,8 @@ function App() {
             <tbody>
               {filteredIndexData.map((item, index) => (
                 <tr key={index}>
-                  <td>{item.location}</td>
-                  <td>{item.events}</td>
+                  <td>{item.venueNameE}</td>
+                  <td>{item.eventCount}</td>
                   <td><ForwardFill href="#" size={24} /></td>
                 </tr>
               ))}
