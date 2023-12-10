@@ -2,7 +2,7 @@ import React from 'react';
 //Import bootstrap classes here
 import { Navbar, Nav, NavDropdown, Table, Dropdown, DropdownButton, Offcanvas, Form, InputGroup, FormControl, Button, Container, Stack, Row, Col } from 'react-bootstrap';
 //Import react stuff here
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 //import axios from 'axios';
 
@@ -108,6 +108,32 @@ function App() {
       );
     }
   };
+
+
+  //By 1155189480
+  //To fix the width of the offcanvas and take up entire screen at some point
+  const [indexWidth, setIndexWidth] = useState();
+  const [profileWidth, setProfileWidth] = useState();
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < window.screen.width * 0.35)
+        setProfileWidth('100%');
+      else
+        setProfileWidth(window.screen.width * 0.35);
+
+      if (window.innerWidth < window.screen.width * 0.75)
+        setIndexWidth('100%');
+      else
+        setIndexWidth(window.screen.width * 0.75);
+    };
+
+    window.addEventListener('resize', handleResize);
+
+    handleResize();
+
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
   
 
  //after login. if user not admin then return this:
@@ -130,7 +156,7 @@ function App() {
         </Nav>
       </Navbar>
 
-      <Offcanvas show={isOpen} onHide={handleClose} style={{width: "75%"}}>
+      <Offcanvas show={isOpen} onHide={handleClose} style={{width: indexWidth}}>
         <Offcanvas.Header closeButton>
           <Offcanvas.Title>Index</Offcanvas.Title>
         </Offcanvas.Header>
@@ -168,7 +194,7 @@ function App() {
         </Offcanvas.Body>
       </Offcanvas>
 
-      <Offcanvas show={profileIsOpen} onHide={handleProfileClose} placement={'end'} style={{width: "35%"}}>
+      <Offcanvas show={profileIsOpen} onHide={handleProfileClose} placement={'end'} style={{width: profileWidth}}>
         <Offcanvas.Header closeButton>
           <Offcanvas.Title>Profile</Offcanvas.Title>
         </Offcanvas.Header>
