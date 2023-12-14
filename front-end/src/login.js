@@ -1,47 +1,55 @@
 import React, { useState } from 'react';
-import { Form, Button } from 'react-bootstrap';
+import { Form, Button, Alert } from 'react-bootstrap';
 import axios from 'axios';
-
 import { useNavigate } from 'react-router-dom';
-
 
 const Login = ({ setIsLoggedIn, setIsAdmin }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [message, setMessage] = useState('');
+  const [error, setError] = useState(false);
   const navigate = useNavigate();
 
-  const handleLogin = async () => {
-    try {
-      const response = await axios.post('http://localhost:3001/login', { username, password });
-      if (response.data.user) {
-        setIsLoggedIn(true);
-        if (response.data.user.isAdmin) {
-          setIsAdmin(true);
+  const handleLogin = (username, password) => {
+    axios.post('http://localhost:3001/login', { username, password })
+    .then(response => {
+        setMessage(response.data.message);
+        if (response.data.token) {
+            localStorage.setItem('token', response.data.token);
+            localStorage.setItem('userInfo', JSON.stringify(response.data.user)); // Store user info
+            setIsLoggedIn(true);
+            if (response.data.user) {
+                setIsAdmin(response.data.user.isAdmin);
+            }
+            navigate('/location'); // Assuming 'navigate' is a function from a routing library like React Router
+        } else {
+            setError(true);
         }
-        else{
-          navigate('/location');
-        }
-      } else {
-        console.log("Login failed");
-      }
-    } catch (error) {
-      console.error("Error during login:", error);
-    }
-  };
+    })
+    .catch(error => {
+        setError(true);
+        const errorMessage = error.response?.data?.message || error.message;
+        setMessage("Error during login: " + errorMessage);
+        console.error('Error:', error);
+    });
+};
 
+  
   const handleRegister = async () => {
     try {
       const response = await axios.post('http://localhost:3001/register', { username, password });
-      console.log(response.data.message);
-      // plz add redirect the user to the login page after successful registration
-    } catch (error) {
-      console.error("Error during registration:", error);
+      setMessage(response.data.message);
+      // navigate('/login');
+    } catch (err) {
+      setError(true);
+      setMessage("Error during registration: " + err.response?.data?.message || err.message);
     }
   };
 
   return (
     <div>
       <h1>Login Form</h1>
+      {message && <Alert variant={error ? 'danger' : 'success'}>{message}</Alert>}
       <Form>
         {/* Username input */}
         <Form.Group className="mb-3" controlId="formBasicUsername">
@@ -66,7 +74,7 @@ const Login = ({ setIsLoggedIn, setIsAdmin }) => {
         </Form.Group>
 
         {/* Login register */}
-        <Button variant="primary" type="button" onClick={handleLogin}>
+        <Button onClick={() => handleLogin(username, password)}>
           Login
         </Button>
         <Button variant="primary" type="button" onClick={handleRegister}>
@@ -78,3 +86,4 @@ const Login = ({ setIsLoggedIn, setIsAdmin }) => {
 };
 
 export default Login;
+

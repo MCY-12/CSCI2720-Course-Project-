@@ -50,7 +50,14 @@ const MapContainer = ({ locations }) => {
   )
 }
 
+const getUserInfo = () => {
+  const userInfo = localStorage.getItem('userInfo');
+  return userInfo ? JSON.parse(userInfo) : null;
+};
+const userInfo = getUserInfo();
+
 function Location() {
+  
   //For the Index offcanvas menu
   const [isOpen, setIsOpen] = useState(false);
   const handleClose = () => setIsOpen(false);
@@ -196,28 +203,55 @@ function Location() {
   const [isFavourite, setIsFavourite] = useState(false);
 
   useEffect(() => {
-    fetch('http://localhost:3001/user/favorites')
+    const userId = userInfo.id; // Get user ID from userInfo
+    fetch(`http://localhost:3001/user/favorites?userId=${userId}`)
         .then(response => response.json())
         .then(data => {
+            const isFav = data.favorites.some(favVenue => favVenue.venueId == venueId);
             setFavourites(data.favorites);
-            setIsFavourite(data.favorites.includes(venueId));
+            setIsFavourite(isFav);
         })
         .catch(error => console.error(error));
-  }, []);
+  }, [venueId, userInfo]);
+
+  // const handleFavouriteClick = () => {
+  //   const options = isFavourite
+  //       ? { method: 'DELETE' }
+  //       : { method: 'POST' };
+
+  //   fetch(`http://localhost:3001/user/favorites/${venueId}`, options)
+  //       .then(response => response.json())
+  //       .then(data => {
+  //           setFavourites(data.favorites);
+  //           setIsFavourite(!isFavourite);
+  //       })
+  //       .catch(error => console.error(error));
+  // };
 
   const handleFavouriteClick = () => {
-    const options = isFavourite
-        ? { method: 'DELETE' }
-        : { method: 'POST' };
+    const userId = userInfo.id; // Retrieve user ID from userInfo
+    const url = isFavourite 
+        ? `http://localhost:3001/user/favorites/${venueId}?userId=${userId}`
+        : `http://localhost:3001/user/favorites/${venueId}`;
 
-    fetch(`http://localhost:3001/user/favorites/${venueId}`, options)
+    const options = {
+        method: isFavourite ? 'DELETE' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: userId }) // Include user ID in the body for POST request
+    };
+
+    // For DELETE request, remove body
+    if (isFavourite) delete options.body;
+
+    fetch(url, options)
         .then(response => response.json())
         .then(data => {
             setFavourites(data.favorites);
             setIsFavourite(!isFavourite);
         })
         .catch(error => console.error(error));
-  };
+};
+
 
  //after login. if user not admin then return this:
 
