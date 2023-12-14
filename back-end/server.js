@@ -53,7 +53,7 @@ const Event = mongoose.model('Event', eventSchema);
 const userSchema = new mongoose.Schema({
   username: String,
   password: String,
-  email: String,
+  //email: String,
   isAdmin: Boolean,
   favorites: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Show' }] // Array of venue IDs
 });
@@ -73,34 +73,45 @@ const Comment = mongoose.model('Comment', commentSchema);
 const Show = mongoose.model('Show', venueSchema);
 const ShowEvent = mongoose.model('ShowEvent', eventSchema);
 
-// Function to fetch and process venue data
-async function processVenueData() {
+
+let selectedVenueIds = [];
+
+
+async function processVenueData(eventXml) {
   const venueResponse = await axios.get('https://www.lcsd.gov.hk/datagovhk/event/venues.xml');
   const venueXml = await parser.parseStringPromise(venueResponse.data);
 
-  const processedVenues = venueXml.venues.venue.map(v => ({
+  let processedVenues = venueXml.venues.venue.map(v => ({
     venueId: parseInt(v.$.id),
     venueNameE: v.venuee[0].trim(),
     latitude: v.latitude[0].trim(),
     longitude: v.longitude[0].trim(),
   }));
 
-  // Save processed venues to MongoDB
-  Venue.insertMany(processedVenues)
-  .then(docs => {
-    console.log("Venues saved successfully");
-  })
-  .catch(err => {
-    console.error("Error saving venues:", err);
-  });
+
+  // Filter venues that have at least 3 events
+  const validVenues = processedVenues.filter(v => 
+    eventXml.events.event.filter(e => parseInt(e.venueid[0].trim()) === v.venueId).length >= 3
+  );
+
+  // Randomly pick 10 venues
+  let selectedVenues = [];
+  while(selectedVenues.length < 10 && validVenues.length > 0) {
+    let randomIndex = Math.floor(Math.random() * validVenues.length);
+    selectedVenues.push(validVenues[randomIndex]);
+    validVenues.splice(randomIndex, 1);
+  }
+
+  let selectedVenueIds = selectedVenues.map(venue => venue.venueId);
+
+  await Venue.deleteMany({});
+  await Venue.insertMany(selectedVenues);
+
+  return selectedVenueIds;
 }
 
-// Function to fetch and process event data
-async function processEventData() {
-  const eventResponse = await axios.get('https://www.lcsd.gov.hk/datagovhk/event/events.xml');
-  const eventXml = await parser.parseStringPromise(eventResponse.data);
-
-  const processedEvents = eventXml.events.event.map(e => ({
+async function processEventData(eventXml, selectedVenueIds) {
+  let processedEvents = eventXml.events.event.map(e => ({
     eventId: parseInt(e.$.id),
     titleE: e.titlee[0].trim(),
     venueId: parseInt(e.venueid[0].trim()),
@@ -110,22 +121,55 @@ async function processEventData() {
     price: e.pricee[0].trim(),
   }));
 
-  // Save processed events to MongoDB
-  Event.insertMany(processedEvents)
-  .then(docs => {
-    console.log("Events saved successfully");
-  })
-  .catch(err => {
-    console.error("Error saving events:", err);
-  });
+  // Filter events based on selected venue IDs
+  processedEvents = processedEvents.filter(event => selectedVenueIds.includes(event.venueId));
+
+  await Event.deleteMany({});
+  await Event.insertMany(processedEvents);
 }
 
 // endpoint to trigger data processing
-app.get('/update-data', async (req, res) => {
+/*app.get('/update-data', async (req, res) => {
   await processVenueData();
   await processEventData();
   res.send('Data updated successfully');
+});*/
+let lastUpdatedTime = null;
+
+app.get('/update-data', async (req, res) => {
+  if (!lastUpdatedTime) {
+    try {
+      const eventResponse = await axios.get('https://www.lcsd.gov.hk/datagovhk/event/events.xml');
+      const eventXml = await parser.parseStringPromise(eventResponse.data);
+
+      // Process venues and get selected venue IDs
+      const selectedVenueIds = await processVenueData(eventXml);
+
+      // Process events with selected venue IDs
+      await processEventData(eventXml, selectedVenueIds);
+
+      lastUpdatedTime = new Date();
+      res.send(`Data updated successfully at ${lastUpdatedTime}`);
+    } catch (error) {
+      console.error('Error updating data:', error);
+      res.status(500).send('Error updating data');
+    }
+  } else {
+    res.send(`Data was already updated at ${lastUpdatedTime}`);
+  }
 });
+
+
+
+
+app.get('/last-updated', (req, res) => {
+  if (lastUpdatedTime) {
+    res.json({ lastUpdated: lastUpdatedTime });
+  } else {
+    res.status(404).send("Data not updated yet");
+  }
+});
+
 
 app.get('/process-venues', async (req, res) => {
   try {
@@ -182,7 +226,8 @@ app.get('/locations', async (req, res) => {
     const locations = await Show.aggregate([
       {
         $lookup: {
-          from: 'showevents',
+          //from: 'showevents',
+          from: "events",
           localField: 'venueId',
           foreignField: 'venueId',
           as: 'events'
@@ -191,6 +236,13 @@ app.get('/locations', async (req, res) => {
       {
         $addFields: { eventCount: { $size: '$events' } }
       },
+
+
+      //new added
+      { $match: { eventCount: { $gte: 3 } } },
+      { $limit: 10 },
+
+
       {
         $sort: { eventCount: sortOrder }
       }
@@ -219,7 +271,15 @@ app.get('/search-venues', async (req, res) => {
 // Endpoint to provide detailed view for a single location, including map integration, location details, and user comments functionality.
 app.get('/location/:venueId', async (req, res) => {
   try {
-    const venueId = req.params.venueId;
+    if (!req.params.venueId) {
+      return res.status(400).send('Venue ID is required');
+    }
+    const venueId = Number(req.params.venueId); // Convert to number
+    if (isNaN(venueId)) {
+      return res.status(400).send('Invalid venueId');
+    }
+    
+    
     // Fetch venue details
     const venue = await Show.findOne({ venueId });
     if (!venue) {
@@ -351,12 +411,12 @@ app.post('/login', async (req, res) => {
 // User Register
 app.post('/register', async (req, res) => {
   try {
-    const { username, email } = req.body;
+    const { username} = req.body;
     const hashedPassword = await bcrypt.hash(req.body.password, saltRounds);
     const newUser = new User({
       username,
       password: hashedPassword,
-      email,
+      //email,
       isAdmin: false
     });
 
