@@ -5,19 +5,50 @@ import { Navbar, Nav, NavDropdown, Table, Dropdown, DropdownButton, Offcanvas, F
 import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Link, useParams } from 'react-router-dom';
 
-//import axios from 'axios';
+import axios from 'axios';
+
 
 import './App.css';
-
-import EventManagement from './EventManagement';
-import UserManagement from './UserManagement';
-import Login from './login';
 
 //Import bootstrap icons here
 import { FilePerson, ForwardFill, FilterCircle, Heart, HeartFill } from 'react-bootstrap-icons';
 
 //https://react-bootstrap.github.io/docs/getting-started/introduction
 //if you need help on how the react bootstrap code is written ^^
+
+
+import { GoogleMap, LoadScript, Marker } from "@react-google-maps/api";
+
+const MapContainer = ({ locations }) => {
+  const mapStyles = {        
+    height: "400px",
+    width: "100%"};
+
+  const defaultCenter = {
+    lat: 22.3193, lng: 114.1694  // Default Hong Kong's coordinates
+  }
+
+  return (
+     <LoadScript googleMapsApiKey="AIzaSyBJxvnMJMmvjnEuYPbvMIKwUTYp1ZKNArg">
+       <GoogleMap
+          mapContainerStyle={mapStyles}
+          zoom={13}
+          center={defaultCenter}
+       >
+         {
+           locations.map(item => {
+             return (
+               <Marker key={item.venueId}
+                 position={{lat: parseFloat(item.latitude), lng: parseFloat(item.longitude)}}
+                 onClick={() => window.location.href=`/location/${item.venueId}`}
+               />
+             )
+           })
+         }
+       </GoogleMap>
+     </LoadScript>
+  )
+}
 
 function Location() {
   //For the Index offcanvas menu
@@ -36,13 +67,28 @@ function Location() {
   //For Index offcanvas table number of events sort
   const [indexData, setIndexData] = useState([]);
 
-  //Fetch locations data to show in index table
+
+
+  const [venuesData, setVenuesData] = useState([]);
+
+  // Fetching the processed data when the component loads
   useEffect(() => {
+    axios.get('http://localhost:3001/update-data')
+      .then(() => axios.get('http://localhost:3001/locations'))
+      .then(response => {
+        setVenuesData(response.data);
+        setIndexData(response.data);
+      })
+      .catch(error => console.error('Error fetching locations:', error));
+  }, []);
+
+  //Fetch locations data to show in index table
+  /*useEffect(() => {
     fetch('http://localhost:3001/locations')
       .then(response => response.json())
       .then(data => setIndexData(data))
       .catch(error => console.error(error));
-  }, []);
+  }, []);*/
     //data here..
     //backend people link this to your database somehow
 
@@ -89,33 +135,7 @@ function Location() {
         setIsAdmin(false);
     };
     
-    // Render based on user authentication
-    const renderContent = () => {
-        if (isLoggedIn) {
-      if (isAdmin) {
-        return (
-          <div>
-            <EventManagement />
-            <UserManagement />
-          </div>
-        );
-    } else {
-        return (
-            <div>
-            <h1>User(Below done by James)</h1>
-          </div>
-        );
-    }
-} else {
-    // Render login form for non-authenticated user
-    return (
-        <div>
-          <Login />
-        </div>
-      );
-    }
-  };
-  
+
   
   //By 1155189480
   //To fix the width of the offcanvas and take up entire screen at some point
@@ -313,9 +333,7 @@ function Location() {
       </Stack>
       
       <Container fluid>
-          <Col>
-            <div className="placeholder">Map</div>
-          </Col>    
+          <MapContainer locations={venuesData} />
       </Container>
       <Container fluid className="mx-3 pb-4 bg-light">
           {locationData && locationData.venue && locationData.events && (
