@@ -16,7 +16,7 @@ Make sure you have the following installed on your machine:
 
 ### Installing Dependencies
 
-To set up the back-end, run the following command in your terminal:
+To set up the front-end, run the following command in your terminal:
 
 ```bash
 cd front-end
