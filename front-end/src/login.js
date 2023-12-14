@@ -2,10 +2,13 @@ import React, { useState } from 'react';
 import { Form, Button } from 'react-bootstrap';
 import axios from 'axios';
 
+import { useNavigate } from 'react-router-dom';
+
+
 const Login = ({ setIsLoggedIn, setIsAdmin }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [email, setEmail] = useState(''); //remove if no need
+  const navigate = useNavigate();
 
   const handleLogin = async () => {
     try {
@@ -14,6 +17,9 @@ const Login = ({ setIsLoggedIn, setIsAdmin }) => {
         setIsLoggedIn(true);
         if (response.data.user.isAdmin) {
           setIsAdmin(true);
+        }
+        else{
+          navigate('/location');
         }
       } else {
         console.log("Login failed");
@@ -25,7 +31,7 @@ const Login = ({ setIsLoggedIn, setIsAdmin }) => {
 
   const handleRegister = async () => {
     try {
-      const response = await axios.post('http://localhost:3001/register', { username, password, email });
+      const response = await axios.post('http://localhost:3001/register', { username, password });
       console.log(response.data.message);
       // plz add redirect the user to the login page after successful registration
     } catch (error) {
