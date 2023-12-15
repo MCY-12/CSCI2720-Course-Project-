@@ -792,12 +792,18 @@ app.get('/admin/users', isAdmin, async (req, res) => {
 // UPDATE User
 app.put('/admin/user/:userId', isAdmin, async (req, res) => {
 	try {
-		const updatedUser = await User.findByIdAndUpdate(req.params.userId, req.body, { new: true });
-		res.status(200).json({ message: 'User updated successfully', user: updatedUser });
+	  let update = req.body;
+	  if (update.password) {
+		update.password = await bcrypt.hash(update.password, saltRounds);
+	  }
+  
+	  const updatedUser = await User.findByIdAndUpdate(req.params.userId, update, { new: true });
+	  res.status(200).json({ message: 'User updated successfully', user: updatedUser });
 	} catch (error) {
-		res.status(500).json({ message: 'Error updating user', error: error.message });
+	  res.status(500).json({ message: 'Error updating user', error: error.message });
 	}
-});
+  });
+  
 
 // DELETE User
 app.delete('/admin/user/:userId', isAdmin, async (req, res) => {
