@@ -407,6 +407,7 @@ app.get('/user/favorites', async (req, res) => {
             _id: fav._id,
             venueId: fav.venueId, // Replace with the field name used in your Venue schema
             // include other venue details you want to send
+			venueNameE: fav.venueNameE
         }));
 
         res.json({ favorites: favoriteVenues });

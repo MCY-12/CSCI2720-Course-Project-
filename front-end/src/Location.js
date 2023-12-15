@@ -4,6 +4,7 @@ import { Navbar, Nav, NavDropdown, Table, Dropdown, DropdownButton, Offcanvas, F
 //Import react stuff here
 import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Link, useParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 import axios from 'axios';
 
@@ -17,47 +18,86 @@ import { FilePerson, ForwardFill, FilterCircle, Heart, HeartFill } from 'react-b
 //if you need help on how the react bootstrap code is written ^^
 
 
-import { GoogleMap, LoadScript, Marker } from "@react-google-maps/api";
+// import { GoogleMap, LoadScript, Marker } from "@react-google-maps/api";
 
-const MapContainer = ({ locations }) => {
-  const mapStyles = {        
-    height: "400px",
-    width: "100%"};
+// const MapContainer = ({ locations }) => {
+//   const mapStyles = {        
+//     height: "400px",
+//     width: "100%"};
 
-  const defaultCenter = {
-    lat: 22.3193, lng: 114.1694  // Default Hong Kong's coordinates
-  }
+//   const defaultCenter = {
+//     lat: 22.3193, lng: 114.1694  // Default Hong Kong's coordinates
+//   }
 
-  return (
-     <LoadScript googleMapsApiKey="AIzaSyBJxvnMJMmvjnEuYPbvMIKwUTYp1ZKNArg">
-       <GoogleMap
-          mapContainerStyle={mapStyles}
-          zoom={13}
-          center={defaultCenter}
-       >
-         {
-           locations.map(item => {
-             return (
-               <Marker key={item.venueId}
-                 position={{lat: parseFloat(item.latitude), lng: parseFloat(item.longitude)}}
-                 onClick={() => window.location.href=`/location/${item.venueId}`}
-               />
-             )
-           })
-         }
-       </GoogleMap>
-     </LoadScript>
-  )
-}
+//   return (
+//      <LoadScript googleMapsApiKey="AIzaSyBJxvnMJMmvjnEuYPbvMIKwUTYp1ZKNArg">
+//        <GoogleMap
+//           mapContainerStyle={mapStyles}
+//           zoom={13}
+//           center={defaultCenter}
+//        >
+//          {
+//            locations.map(item => {
+//              return (
+//                <Marker key={item.venueId}
+//                  position={{lat: parseFloat(item.latitude), lng: parseFloat(item.longitude)}}
+//                  onClick={() => window.location.href=`/location/${item.venueId}`}
+//                />
+//              )
+//            })
+//          }
+//        </GoogleMap>
+//      </LoadScript>
+//   )
+// }
 
-const getUserInfo = () => {
-  const userInfo = localStorage.getItem('userInfo');
-  return userInfo ? JSON.parse(userInfo) : null;
+import { GoogleMap, Marker } from "@react-google-maps/api";
+
+const MapContainer = ({ locations, selectedVenueCoords }) => {
+    const mapStyles = {        
+        height: "400px",
+        width: "100%"
+    };
+
+    const defaultCenter = {
+        lat: 22.3193, lng: 114.1694  // Default Hong Kong's coordinates
+    };
+
+    return (
+        <div>
+            {window.google && (
+                <GoogleMap
+                    mapContainerStyle={mapStyles}
+                    zoom={13}
+                    center={selectedVenueCoords || defaultCenter}
+                >
+                    {locations.map(item => (
+                        <Marker key={item.venueId}
+                            position={{lat: parseFloat(item.latitude), lng: parseFloat(item.longitude)}}
+                            onClick={() => window.location.href=`/location/${item.venueId}`}
+                        />
+                    ))}
+                </GoogleMap>
+            )}
+        </div>
+    );
 };
-const userInfo = getUserInfo();
-
+// const getUserInfo = () => {
+//   const userInfo = localStorage.getItem('userInfo');
+//   return userInfo ? JSON.parse(userInfo) : null;
+// };
+// const userInfo = getUserInfo();
 function Location() {
+  const [userInfo, setUserInfo] = useState(null);
+  useEffect(() => {
+    const storedUserInfo = localStorage.getItem('userInfo');
+    if (storedUserInfo) {
+      setUserInfo(JSON.parse(storedUserInfo));
+    }
+  }, []);
   
+  const [selectedVenueCoords, setSelectedVenueCoords] = useState(null);
+  const navigate = useNavigate();
   //For the Index offcanvas menu
   const [isOpen, setIsOpen] = useState(false);
   const handleClose = () => setIsOpen(false);
@@ -136,10 +176,13 @@ function Location() {
       
       
     };
-    
+
     const handleLogout = () => {
         setIsLoggedIn(false);
         setIsAdmin(false);
+        localStorage.removeItem('token');
+        localStorage.removeItem('userInfo');
+        navigate('/'); // Redirect to the login page
     };
     
 
@@ -203,6 +246,7 @@ function Location() {
   const [isFavourite, setIsFavourite] = useState(false);
 
   useEffect(() => {
+    if (userInfo) {
     const userId = userInfo.id; // Get user ID from userInfo
     fetch(`http://localhost:3001/user/favorites?userId=${userId}`)
         .then(response => response.json())
@@ -212,6 +256,7 @@ function Location() {
             setIsFavourite(isFav);
         })
         .catch(error => console.error(error));
+      }
   }, [venueId, userInfo]);
 
   // const handleFavouriteClick = () => {
@@ -252,6 +297,16 @@ function Location() {
         .catch(error => console.error(error));
 };
 
+const unfavoriteVenue = (venueId) => {
+  const userId = userInfo.id;
+  fetch(`http://localhost:3001/user/favorites/${venueId}?userId=${userId}`, { method: 'DELETE' })
+      .then(response => response.json())
+      .then(data => {
+          setFavourites(data.favorites); // Update the state with the new favorites list
+          setIsFavourite(false); // Update the favorite status
+      })
+      .catch(error => console.error(error));
+};
 
  //after login. if user not admin then return this:
 
@@ -313,7 +368,12 @@ function Location() {
                   <td>{item.venueNameE}</td>
                   <td>{item.eventCount}</td>
                   <td>
-                    <Link to={`http://localhost:3000/location/${item.venueId}`} onClick={handleClose}>
+                    <Link
+                      to={`http://localhost:3000/location/${item.venueId}`}
+                      onClick={() => {
+                        setSelectedVenueCoords({ lat: parseFloat(item.latitude), lng: parseFloat(item.longitude) });
+                        handleClose();
+                      }}>
                       <ForwardFill size={24} />
                     </Link>
                   </td>
@@ -325,21 +385,26 @@ function Location() {
       </Offcanvas>
 
       <Offcanvas show={profileIsOpen} onHide={handleProfileClose} placement={'end'} style={{width: profileWidth}}>
-        <Offcanvas.Header closeButton>
-          <Offcanvas.Title>Profile</Offcanvas.Title>
-        </Offcanvas.Header>
-        <Offcanvas.Body>
-          <h5>Username: (someone make it so that this will show their username please)</h5>
-          <h3>Favourites</h3>
-          {/* <p>List the favourites here</p> */}
-          {/* Trying to create the favourite list, needed to be done */}
-          <ListGroup>   
+    <Offcanvas.Header closeButton>
+        <Offcanvas.Title>Profile</Offcanvas.Title>
+    </Offcanvas.Header>
+    <Offcanvas.Body>
+        <h5>Username: {userInfo ? userInfo.username : 'Guest'}</h5>
+        <h3>Favourites</h3>
+        <ListGroup>
             {Array.isArray(favourites) && favourites.map((favourite, index) => (
-                <ListGroup.Item key={index}>{favourite.name}</ListGroup.Item>
+                <ListGroup.Item key={index} className="d-flex justify-content-between align-items-center">
+                    {favourite.venueNameE} {/* Assuming venueNameE is the name field */}
+                    <Button variant="outline-danger" size="sm" onClick={() => unfavoriteVenue(favourite.venueId)}>
+                        Unfavorite
+                    </Button>
+                </ListGroup.Item>
             ))}
-          </ListGroup>
-        </Offcanvas.Body>
-      </Offcanvas>
+        </ListGroup>
+    </Offcanvas.Body>
+</Offcanvas>
+
+
 
       <Stack direction="horizontal" gap={3}>
         <DropdownButton
@@ -367,7 +432,7 @@ function Location() {
       </Stack>
       
       <Container fluid>
-          <MapContainer locations={venuesData} />
+          <MapContainer locations={venuesData} selectedVenueCoords={selectedVenueCoords} />
       </Container>
       <Container fluid className="mx-3 pb-4 bg-light">
           {locationData && locationData.venue && locationData.events && (

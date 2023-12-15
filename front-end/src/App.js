@@ -4,7 +4,7 @@ import { Navbar, Nav, NavDropdown, Table, Dropdown, DropdownButton, Offcanvas, F
 //Import react stuff here
 import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, useParams } from 'react-router-dom';
-
+import ProtectedRoute from './ProtectedRoute'; // Import the ProtectedRoute component
 //import axios from 'axios';
 
 import './App.css';
@@ -25,6 +25,16 @@ function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
 
+  const loadGoogleMapsScript = () => {
+    if (!window.google) {
+        const script = document.createElement('script');
+        script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyBJxvnMJMmvjnEuYPbvMIKwUTYp1ZKNArg&libraries=places`;
+        script.async = true;
+        document.head.appendChild(script);
+    }
+};
+
+loadGoogleMapsScript();
 
   return (
     <div className="App">
@@ -32,11 +42,11 @@ function App() {
       <BrowserRouter>
         <Routes>
 
-          <Route path="/EventManagement" element={<EventManagement />} />
-          <Route path="/UserManagement" element={<UserManagement />} />
-          <Route path="/location/:venueId" element={<Location />} />
-          <Route path="/location" element={<Location />} />
-          <Route path="/" element={<Login setIsLoggedIn={setIsLoggedIn} setIsAdmin={setIsAdmin} />} />
+        <Route path="/EventManagement" element={<ProtectedRoute> <EventManagement /> </ProtectedRoute>} />
+<Route path="/UserManagement" element={<ProtectedRoute> <UserManagement /> </ProtectedRoute>} />
+<Route path="/location/:venueId" element={<ProtectedRoute> <Location /> </ProtectedRoute>} />
+<Route path="/location" element={<ProtectedRoute> <Location /> </ProtectedRoute>} />
+<Route path="/" element={<Login setIsLoggedIn={setIsLoggedIn} setIsAdmin={setIsAdmin} />} />
         </Routes>
       </BrowserRouter>
 
