@@ -420,6 +420,19 @@ const handleLocationFetch = () => {
   }, [venueId]); // Fetch comments when venueId changes and is valid
 
   const [priceInput, setPriceInput] = useState('');
+  useEffect(() => {
+    // Check if priceInput is set, and locationData.venue exists and has a venueId
+    if (!priceInput || !locationData.venue || !locationData.venue.venueId) return;
+
+    let queryUrl = `http://localhost:3001/events/price/${priceFilterTitle.toLowerCase()}/${priceInput}/${locationData.venue.venueId}`;
+
+    fetch(queryUrl)
+        .then(response => response.json())
+        .then(filteredEvents => {
+            setLocationData({ ...locationData, events: filteredEvents });
+        })
+        .catch(error => console.error('Error fetching filtered events:', error));
+}, [priceInput, priceFilterTitle, locationData.venue?.venueId]); // Use optional chaining for venueId
 
  //after login. if user not admin then return this:
 
