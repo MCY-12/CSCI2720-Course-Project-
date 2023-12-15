@@ -165,18 +165,32 @@ function Location() {
     setIndexNumberOfEventsSortConfig({ key, direction });
   };  
 
-
+const handleLocationFetch = () => {
+  fetch(`http://localhost:3001/location/${venueId}`)
+  .then(response => response.json())
+  .then(data => setLocationData(data))
+  .catch(error => console.error(error));
+};
   
   //by 1155174712
   const [isLoggedIn, setIsLoggedIn] = useState(false); //set initial state based on user authentication)
   const [isAdmin, setIsAdmin] = useState(false); //admin authentication)
   
   const handlePriceFilterSelect = (eventKey) => {
-      setPriceFilterTitle(eventKey);
-      //I don't have enough time to implement: fetch and display events based on the selected price filter
-      
-      
-    };
+    setPriceFilterTitle(eventKey);
+    if (!priceInput || !locationData.venue.venueId) return;
+
+    let queryUrl = `http://localhost:3001/events/price/${eventKey.toLowerCase()}/${priceInput}/${locationData.venue.venueId}`;
+
+    fetch(queryUrl)
+        .then(response => response.json())
+        .then(filteredEvents => {
+            setLocationData({ ...locationData, events: filteredEvents });
+        })
+        .catch(error => console.error('Error fetching filtered events:', error));
+};
+
+
 
     const handleLogout = () => {
         setIsLoggedIn(false);
@@ -259,14 +273,14 @@ function Location() {
         .catch(error => console.error(error));
     }, [venueId]);
 
-    useEffect(() => {
-      fetch(`http://localhost:3001/venue/${venueId}/comments`)
-          .then(response => response.json())
-          .then(data => {
-              setVenueComments(data); // Assuming you have a state variable for this
-          })
-          .catch(error => console.error('Error fetching comments:', error));
-    }, [venueId]);
+    // useEffect(() => {
+    //   fetch(`http://localhost:3001/venue/${venueId}/comments`)
+    //       .then(response => response.json())
+    //       .then(data => {
+    //           setVenueComments(data); // Assuming you have a state variable for this
+    //       })
+    //       .catch(error => console.error('Error fetching comments:', error));
+    // }, [venueId]);
 
 //Nav Bar Search based on back-end search-venues
   const [navSearchTerm, setNavSearchTerm] = useState('');
@@ -353,6 +367,12 @@ const unfavoriteVenue = (venueId) => {
 };
 
 const fetchComments = () => {
+  // Check if venueId is valid before fetching comments
+  if (!venueId || venueId === "") {
+      console.log('No valid venueId provided');
+      return; // Exit the function if venueId is not valid
+  }
+
   fetch(`http://localhost:3001/venue/${venueId}/comments`)
       .then(response => response.json())
       .then(data => {
@@ -363,7 +383,9 @@ const fetchComments = () => {
 
 useEffect(() => {
   fetchComments();
-}, [venueId]); // Fetch comments when the component mounts or venueId changes
+}, [venueId]); // Fetch comments when venueId changes and is valid
+
+const [priceInput, setPriceInput] = useState('');
 
  //after login. if user not admin then return this:
 
@@ -430,6 +452,7 @@ useEffect(() => {
                       onClick={() => {
                         setSelectedVenueCoords({ lat: parseFloat(item.latitude), lng: parseFloat(item.longitude) });
                         handleClose();
+                        handleLocationFetch();
                       }}>
                       <ForwardFill size={24} />
                     </Link>
@@ -484,7 +507,12 @@ useEffect(() => {
             <Dropdown.Item eventKey="Over">Over</Dropdown.Item>
             <Dropdown.Item eventKey="Exactly">Exactly</Dropdown.Item>
           </DropdownButton>
-          <FormControl placeholder="$" aria-label="price-filter-input-field"/>
+          <FormControl 
+    placeholder="$" 
+    aria-label="price-filter-input-field"
+    value={priceInput}
+    onChange={(e) => setPriceInput(e.target.value)}
+/>
         </InputGroup>
       </Stack>
       

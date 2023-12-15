@@ -416,21 +416,50 @@ app.get('/user/favorites', async (req, res) => {
     }
 });
 
+function extractPrices(priceString) {
+    // Check if the price string contains '$'
+    if (!priceString.includes('$')) {
+        return [0]; // If no '$' symbol, return [0]
+    }
 
-// Endpoint to list events filtered by price criteria (e.g., events with price ≤100).
-app.get('/events/price/:maxPrice', async (req, res) => {
-	try {
-		const maxPrice = parseInt(req.params.maxPrice);
+    const prices = priceString.match(/\d+/g) || [];
+    return prices.map(Number);
+}
 
-		// Filter events where price is less than or equal to maxPrice
-		const events = await Event.find({ 
-			price: { $lte: maxPrice }
-		});
+// Endpoint for events with price under a certain value
+app.get('/events/price/under/:maxPrice/:venueId', async (req, res) => {
+    const maxPrice = parseInt(req.params.maxPrice);
+	const venueId = parseInt(req.params.venueId);
+    const events = await Event.find({venueId: venueId});
+    const filteredEvents = events.filter(event => {
+        const prices = extractPrices(event.price);
+        return prices.some(price => price <= maxPrice);
+    });
+    res.json(filteredEvents);
+});
 
-		res.json(events);
-	} catch (error) {
-		res.status(500).json({ message: 'Error fetching events', error: error.message });
-	}
+// Endpoint for events with price over a certain value
+app.get('/events/price/over/:minPrice/:venueId', async (req, res) => {
+    const minPrice = parseInt(req.params.minPrice);
+	const venueId = parseInt(req.params.venueId);
+    const events = await Event.find({venueId: venueId});
+    const filteredEvents = events.filter(event => {
+        const prices = extractPrices(event.price);
+        return prices.some(price => price >= minPrice);
+    });
+    res.json(filteredEvents);
+});
+
+// Endpoint for events with a specific price
+app.get('/events/price/exactly/:exactPrice/:venueId', async (req, res) => {
+    const exactPrice = parseInt(req.params.exactPrice);
+	const venueId = parseInt(req.params.venueId);
+    const events = await Event.find({venueId: venueId});
+    const filteredEvents = events.filter(event => {
+        const prices = extractPrices(event.price);
+        return prices.includes(exactPrice);
+    });
+    res.json(filteredEvents);
 });
 
 // Create a POST endpoint for creating comments
