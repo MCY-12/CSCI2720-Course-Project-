@@ -509,38 +509,8 @@ const handleLocationFetch = () => {
           </ListGroup>
         </Offcanvas.Body>
       </Offcanvas>
-
-      <Stack direction="horizontal" gap={3}>
-        <DropdownButton
-          id="location-filter"
-          variant="secondary"
-          title="Location Filter"
-          className="my-2 ms-3"
-        >
-          <Dropdown.Item href="#/action-1" active>Location 1 (change these)</Dropdown.Item>
-          <Dropdown.Item href="#/action-2">Location 2</Dropdown.Item>
-          <Dropdown.Divider />
-          <Dropdown.Item href="#/action-3">Location 3</Dropdown.Item>
-          <Dropdown.Item href="#/action-4">Location 4</Dropdown.Item>
-        </DropdownButton>
-
-        <InputGroup className="my-2 me-3" style={{maxWidth: "500px"}}>
-          <InputGroup.Text>Price:</InputGroup.Text>
-          <DropdownButton variant="secondary" title={priceFilterTitle} id="price-filter-dropdown" onSelect={handlePriceFilterSelect}>
-            <Dropdown.Item eventKey="Under">Under</Dropdown.Item>
-            <Dropdown.Item eventKey="Over">Over</Dropdown.Item>
-            <Dropdown.Item eventKey="Exactly">Exactly</Dropdown.Item>
-          </DropdownButton>
-          <FormControl 
-            placeholder="$" 
-            aria-label="price-filter-input-field"
-            value={priceInput}
-            onChange={(e) => setPriceInput(e.target.value)}
-          />
-        </InputGroup>
-      </Stack>
       
-      <Container fluid>
+      <Container fluid className='my-3'>
         <MapContainer locations={venuesData} selectedVenueCoords={selectedVenueCoords} navigate={navigate} />
       </Container>
       <Container fluid className="mx-3 pb-4 bg-light">
@@ -553,6 +523,22 @@ const handleLocationFetch = () => {
                 <h2 className="my-2 pt-2 fw-bold">{locationData.venue.venueNameE}</h2>
               </row>
               <h4 className="mt-4 fw-bold">Events:</h4>
+              <Stack direction="horizontal" gap={3}>
+                <InputGroup className="my-2 mx-3" style={{maxWidth: "500px"}}>
+                  <InputGroup.Text className='fw-bold'>Price:</InputGroup.Text>
+                  <DropdownButton variant="success" title={priceFilterTitle} id="price-filter-dropdown" onSelect={handlePriceFilterSelect}>
+                    <Dropdown.Item eventKey="Under">Under</Dropdown.Item>
+                    <Dropdown.Item eventKey="Over">Over</Dropdown.Item>
+                    <Dropdown.Item eventKey="Exactly">Exactly</Dropdown.Item>
+                  </DropdownButton>
+                  <FormControl 
+                    placeholder="$" 
+                    aria-label="price-filter-input-field"
+                    value={priceInput}
+                    onChange={(e) => setPriceInput(e.target.value)}
+                  />
+                </InputGroup>
+              </Stack>
               {locationData.events.map((event, index) => (
                 <Container className="mt-2 ms-3" key={index}>   
                   <Button className='fw-bolder'
