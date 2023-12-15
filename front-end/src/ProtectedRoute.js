@@ -2,8 +2,8 @@ import React from 'react';
 import { Navigate } from 'react-router-dom';
 
 const ProtectedRoute = ({ children }) => {
-    const token = localStorage.getItem('token');
-    const userInfo = localStorage.getItem('userInfo');
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+    const userInfo = localStorage.getItem('userInfo') || sessionStorage.getItem('userInfo');
 
     if (!token || !userInfo) {
         // User not authenticated; redirect to login page

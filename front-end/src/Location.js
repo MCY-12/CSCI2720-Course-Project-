@@ -197,6 +197,8 @@ const handleLocationFetch = () => {
         setIsAdmin(false);
         localStorage.removeItem('token');
         localStorage.removeItem('userInfo');
+        sessionStorage.removeItem('token');
+        sessionStorage.removeItem('userInfo');
         navigate('/'); // Redirect to the login page
     };
     
@@ -526,9 +528,9 @@ const [priceInput, setPriceInput] = useState('');
               <Button className="mx-3" variant="outline-danger" onClick={handleFavouriteClick} >
                  {isFavourite ? <HeartFill size={24} /> : <Heart size={24} />}
               </Button>
-              <p>Description of location here</p>
+              {/* <p>Description of location here</p>
               <p>someone set up the google maps api please</p>
-              <p>Someone help me put the favorite icon in a better position^</p>
+              <p>Someone help me put the favorite icon in a better position^</p> */}
                 {locationData.events.map((event, index) => (
                     <Container className="ms-3" key={index}>
                         <h4 className="mt-4 fw-bold">Events:</h4>

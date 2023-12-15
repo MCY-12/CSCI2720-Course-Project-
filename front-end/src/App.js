@@ -6,7 +6,7 @@ import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, useParams } from 'react-router-dom';
 import ProtectedRoute from './ProtectedRoute'; // Import the ProtectedRoute component
 //import axios from 'axios';
-
+import { useNavigate } from 'react-router-dom';
 import './App.css';
 
 //import EventManagement from './EventManagement';
@@ -22,7 +22,6 @@ import { FilePerson, ForwardFill, FilterCircle, Heart, HeartFill } from 'react-b
 //if you need help on how the react bootstrap code is written ^^
 
 function App() {
-
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
 
@@ -37,6 +36,42 @@ function App() {
 
 loadGoogleMapsScript();
 
+useEffect(() => {
+  // Define the function to be called when the window is about to be unloaded
+  const handleBeforeUnload = () => {
+    sessionStorage.removeItem('token');
+    sessionStorage.removeItem('userInfo');
+  };
+
+  // Assign the function to the onbeforeunload event
+  window.onbeforeunload = handleBeforeUnload;
+
+  // Clean up the event handler when the component unmounts
+  return () => {
+    window.onbeforeunload = null;
+  };
+}, []);
+
+function HomeRoute({ setIsLoggedIn, setIsAdmin }) {
+  const navigate = useNavigate();
+  const tokenExists = localStorage.getItem('token') || sessionStorage.getItem('token');
+
+  useEffect(() => {
+    // Perform the navigation in a useEffect hook
+    if (tokenExists) {
+      navigate('/location');
+    }
+  }, [navigate, tokenExists]); // Add dependencies to the dependency array of useEffect
+
+  // If token doesn't exist, render the Login component
+  if (!tokenExists) {
+    return <Login setIsLoggedIn={setIsLoggedIn} setIsAdmin={setIsAdmin} />;
+  }
+
+  // Return null while waiting for the useEffect to run
+  return null;
+}
+
   return (
     <div className="App">
 
@@ -48,7 +83,7 @@ loadGoogleMapsScript();
 <Route path="/admin" element={<ProtectedRoute> <Admin /> </ProtectedRoute>} />
 <Route path="/location/:venueId" element={<ProtectedRoute> <Location /> </ProtectedRoute>} />
 <Route path="/location" element={<ProtectedRoute> <Location /> </ProtectedRoute>} />
-<Route path="/" element={<Login setIsLoggedIn={setIsLoggedIn} setIsAdmin={setIsAdmin} />} />
+<Route path="/" element={<HomeRoute setIsLoggedIn={setIsLoggedIn} setIsAdmin={setIsAdmin} />} />
         </Routes>
       </BrowserRouter>
 

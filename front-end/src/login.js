@@ -9,14 +9,25 @@ const Login = ({ setIsLoggedIn, setIsAdmin }) => {
   const [message, setMessage] = useState('');
   const [error, setError] = useState(false);
   const navigate = useNavigate();
+  const [rememberMe, setRememberMe] = useState(false);
 
+  const handleRememberMeChange = (e) => {
+      setRememberMe(e.target.checked);
+  };
   const handleLogin = (username, password) => {
     axios.post('http://localhost:3001/login', { username, password })
     .then(response => {
         setMessage(response.data.message);
         if (response.data.token) {
-            localStorage.setItem('token', response.data.token);
-            localStorage.setItem('userInfo', JSON.stringify(response.data.user));
+            // If 'Remember Me' is checked, use localStorage
+            if (rememberMe) {
+                localStorage.setItem('token', response.data.token);
+                localStorage.setItem('userInfo', JSON.stringify(response.data.user));
+            } else {
+                // If not, use sessionStorage
+                sessionStorage.setItem('token', response.data.token);
+                sessionStorage.setItem('userInfo', JSON.stringify(response.data.user));
+            }
             setIsLoggedIn(true);
             if (response.data.user.isAdmin) {
                 setIsAdmin(true);
@@ -81,6 +92,12 @@ const Login = ({ setIsLoggedIn, setIsAdmin }) => {
                 onChange={(e) => setPassword(e.target.value)}
                 style={{textAlign: "center"}}
               />
+              <Form.Check 
+    type="checkbox" 
+    label="Remember me" 
+    checked={rememberMe} 
+    onChange={handleRememberMeChange} 
+/>
             </Form.Group>
 
             {/* Login register */}
