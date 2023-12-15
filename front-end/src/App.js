@@ -9,8 +9,9 @@ import ProtectedRoute from './ProtectedRoute'; // Import the ProtectedRoute comp
 
 import './App.css';
 
-import EventManagement from './EventManagement';
-import UserManagement from './UserManagement';
+//import EventManagement from './EventManagement';
+//import UserManagement from './UserManagement';
+import Admin from './Admin';
 import Login from './login';
 import Location from './Location';
 
@@ -42,8 +43,9 @@ loadGoogleMapsScript();
       <BrowserRouter>
         <Routes>
 
-        <Route path="/EventManagement" element={<ProtectedRoute> <EventManagement /> </ProtectedRoute>} />
-<Route path="/UserManagement" element={<ProtectedRoute> <UserManagement /> </ProtectedRoute>} />
+       {/* <Route path="/EventManagement" element={<ProtectedRoute> <EventManagement /> </ProtectedRoute>} />
+<Route path="/UserManagement" element={<ProtectedRoute> <UserManagement /> </ProtectedRoute>} />*/}
+<Route path="/admin" element={<ProtectedRoute> <Admin /> </ProtectedRoute>} />
 <Route path="/location/:venueId" element={<ProtectedRoute> <Location /> </ProtectedRoute>} />
 <Route path="/location" element={<ProtectedRoute> <Location /> </ProtectedRoute>} />
 <Route path="/" element={<Login setIsLoggedIn={setIsLoggedIn} setIsAdmin={setIsAdmin} />} />
