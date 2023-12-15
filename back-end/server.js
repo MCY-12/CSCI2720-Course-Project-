@@ -625,15 +625,27 @@ app.post('/register', async (req, res) => {
 
 //Check admin permission
 function isAdmin(req, res, next) {
-	const getUserInfo = () => {
-		const userInfo = localStorage.getItem('userInfo');
-		return userInfo ? JSON.parse(userInfo) : null;
-	};
-	if (userInfo.user && userInfo.isAdmin) {
-		next();
-	} else {
-		res.status(403).send('Access Denied');
-	}
+    // Assuming the user's information including their admin status is stored in the JWT token
+    // and the token is sent in the Authorization header as 'Bearer <token>'
+    const token = req.headers.authorization?.split(' ')[1];
+
+    if (!token) {
+        return res.status(403).json({ message: 'No token provided, access denied' });
+    }
+
+    try {
+        const decoded = jwt.verify(token, 'UDcuPgXEaN8Y8K'); // Use your JWT secret key
+        req.user = decoded;
+
+        // Check if the user has admin privileges
+        if (req.user.isAdmin) {
+            next(); // User is admin, proceed to the next middleware
+        } else {
+            res.status(403).json({ message: 'Access denied' });
+        }
+    } catch (error) {
+        res.status(401).json({ message: 'Invalid token' });
+    }
 }
 
 // Admin-specific routes
@@ -642,7 +654,7 @@ app.get('/admin', isAdmin, (req, res) => {
 });
 
 // CREATE Event
-app.post('/admin/showevent', isAdmin, async (req, res) => {
+/*app.post('/admin/showevent', isAdmin, async (req, res) => {
 	try {
 		const newShowEvent = new ShowEvent(req.body);
 		await newShowEvent.save();
@@ -650,20 +662,38 @@ app.post('/admin/showevent', isAdmin, async (req, res) => {
 	} catch (error) {
 		res.status(500).json({ message: 'Error creating show event', error: error.message });
 	}
-});
-
+});*/
+app.post('/admin/showevent', isAdmin, async (req, res) => {
+	try {
+	  const newEvent = new Event(req.body); // Use Event instead of ShowEvent
+	  await newEvent.save();
+	  res.status(200).json({ message: 'Event created successfully', event: newEvent });
+	} catch (error) {
+	  res.status(500).json({ message: 'Error creating event', error: error.message });
+	}
+  });
+  
 // READ Events
-app.get('/admin/showevents', isAdmin, async (req, res) => {
+/*app.get('/admin/showevents', isAdmin, async (req, res) => {
 	try {
 		const showEvents = await ShowEvent.find({});
 		res.status(200).json(showEvents);
 	} catch (error) {
 		res.status(500).json({ message: 'Error fetching show events', error: error.message });
 	}
-});
+});*/
+app.get('/admin/showevents', isAdmin, async (req, res) => {
+	try {
+	  const events = await Event.find({}); // Use Event
+	  res.status(200).json(events);
+	} catch (error) {
+	  res.status(500).json({ message: 'Error fetching events', error: error.message });
+	}
+  });
+  
 
 // UPDATE Event
-app.put('/admin/showevent/:showEventId', isAdmin, async (req, res) => {
+/*app.put('/admin/showevent/:showEventId', isAdmin, async (req, res) => {
 	try {
 		const updatedShowEvent = await ShowEvent.findByIdAndUpdate(req.params.showEventId, req.body, { new: true });
 		res.status(200).json({ message: 'ShowEvent updated successfully', showEvent: updatedShowEvent });
@@ -671,16 +701,35 @@ app.put('/admin/showevent/:showEventId', isAdmin, async (req, res) => {
 		res.status(500).json({ message: 'Error updating show event', error: error.message });
 	}
 });
+*/
+app.put('/admin/showevent/:eventId', isAdmin, async (req, res) => {
+	try {
+	  const updatedEvent = await Event.findByIdAndUpdate(req.params.eventId, req.body, { new: true });
+	  res.status(200).json({ message: 'Event updated successfully', event: updatedEvent });
+	} catch (error) {
+	  res.status(500).json({ message: 'Error updating event', error: error.message });
+	}
+  });
+  
 
 // DELETE Event
-app.delete('/admin/showevent/:showEventId', isAdmin, async (req, res) => {
+/*.delete('/admin/showevent/:showEventId', isAdmin, async (req, res) => {
 	try {
 		await ShowEvent.findByIdAndDelete(req.params.showEventId);
 		res.status(200).json({ message: 'ShowEvent deleted successfully' });
 	} catch (error) {
 		res.status(500).json({ message: 'Error deleting show event', error: error.message });
 	}
-});
+});*/
+app.delete('/admin/showevent/:eventId', isAdmin, async (req, res) => {
+	try {
+	  await Event.findByIdAndDelete(req.params.eventId);
+	  res.status(200).json({ message: 'Event deleted successfully' });
+	} catch (error) {
+	  res.status(500).json({ message: 'Error deleting event', error: error.message });
+	}
+  });
+  
 
 // CRUD User
 // CREATE User
