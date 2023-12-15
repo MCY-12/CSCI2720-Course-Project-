@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-
+import { Container, Row, Col, Form, Button, Table, Card } from 'react-bootstrap';
 
 const Admin = () => {
   // State for events
@@ -47,8 +47,8 @@ const Admin = () => {
       return {};
     }
   };
-  
-  
+
+
 
 
   // Event management methods
@@ -178,101 +178,150 @@ const Admin = () => {
 
   // Component render
   return (
-    <div>
-      <button onClick={handleLogout}>Logout</button>
-      <h2>Event Management</h2>
-      <form>
-        <label>Event ID:</label>
-        <input type="text" name="EventId" value={newEvent.EventId} onChange={handleInputEventChange} />
-        <label>Title:</label>
-        <input type="text" name="titleE" value={newEvent.titleE} onChange={handleInputEventChange} />
-        <label>Venue ID:</label>
-        <input type="text" name="venueId" value={newEvent.venueId} onChange={handleInputEventChange} />
-        <label>Date:</label>
-        <input type="text" name="date" value={newEvent.date} onChange={handleInputEventChange} />
-        <label>Description:</label>
-        <input type="text" name="descriptionE" value={newEvent.descriptionE} onChange={handleInputEventChange} />
-        <label>Presenter:</label>
-        <input type="text" name="presenterE" value={newEvent.presenterE} onChange={handleInputEventChange} />
-        <label>Price:</label>
-        <input type="text" name="price" value={newEvent.price} onChange={handleInputEventChange} />
+    <Container fluid className="py-4">
+      <Row className="mb-4">
+        <Col>
+          <Button variant="outline-danger" onClick={handleLogout}>Logout</Button>
+        </Col>
+      </Row>
 
-        <button type="button" onClick={handleCreateEvent}>
-          Create Event
-        </button>
-      </form>
-      <table>
-        <thead>
-          <tr>
-            <th>Event ID</th>
-            <th>Title</th>
-            <th>Venue ID</th>
-            <th>Date</th>
-            <th>Description</th>
-            <th>Presenter</th>
-            <th>Price</th>
-          </tr>
-        </thead>
-        <tbody>
-          {events.map((event) => (
-            <tr key={event._id}>
-              <td>{event.EventId}</td>
-              <td>{event.titleE}</td>
-              <td>{event.venueId}</td>
-              <td>{event.date}</td>
-              <td>{event.descriptionE}</td>
-              <td>{event.presenterE}</td>
-              <td>{event.price}</td>
-              <td>
-                <button type="button" onClick={() => handleUpdateEvent(event._id)}>
-                  Update
-                </button>
-                <button type="button" onClick={() => handleDeleteEvent(event._id)}>
-                  Delete
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <Card className="mb-4">
+        <Card.Body>
+          <Card.Title>Event Management</Card.Title>
+          <Form>
+            <Form.Group as={Row} className="mb-3">
+              <Form.Label column sm={2}>Event ID:</Form.Label>
+              <Col sm={10}>
+                <Form.Control type="text" name="EventId" value={newEvent.EventId} onChange={handleInputEventChange} />
+              </Col>
+            </Form.Group>
+            <Form.Group as={Row} className="mb-3">
+              <Form.Label column sm={2}>Title:</Form.Label>
+              <Col sm={10}>
+                <Form.Control type="text" name="titleE" value={newEvent.titleE} onChange={handleInputEventChange} />
+              </Col>
+            </Form.Group>
+            <Form.Group as={Row} className="mb-3">
+              <Form.Label column sm={2}>Venue ID:</Form.Label>
+              <Col sm={10}>
+                <Form.Control type="text" name="venueId" value={newEvent.venueId} onChange={handleInputEventChange} />
+              </Col>
+            </Form.Group>
+            <Form.Group as={Row} className="mb-3">
+              <Form.Label column sm={2}>Date:</Form.Label>
+              <Col sm={10}>
+                <Form.Control type="text" name="date" value={newEvent.date} onChange={handleInputEventChange} />
+              </Col>
+            </Form.Group>
+            <Form.Group as={Row} className="mb-3">
+              <Form.Label column sm={2}>Description:</Form.Label>
+              <Col sm={10}>
+                <Form.Control type="text" name="descriptionE" value={newEvent.descriptionE} onChange={handleInputEventChange} />
+              </Col>
+            </Form.Group>
+            <Form.Group as={Row} className="mb-3">
+              <Form.Label column sm={2}>Presenter:</Form.Label>
+              <Col sm={10}>
+                <Form.Control type="text" name="presenterE" value={newEvent.presenterE} onChange={handleInputEventChange} />
+              </Col>
+            </Form.Group>
+            <Form.Group as={Row} className="mb-3">
+              <Form.Label column sm={2}>Price:</Form.Label>
+              <Col sm={10}>
+                <Form.Control type="text" name="price" value={newEvent.price} onChange={handleInputEventChange} onChange={handleInputEventChange} />
+              </Col>
+            </Form.Group>
+            <Button variant="success" className="mt-3" onClick={handleCreateEvent}>
+              Create Event
+            </Button>
+          </Form>
+        </Card.Body>
+      </Card>
 
+      <Row>
+        <Col>
+          <Table striped bordered hover responsive>
+            <thead>
+              <tr>
+                <th>Event ID</th>
+                <th>Title</th>
+                <th>Venue ID</th>
+                <th>Date</th>
+                <th>Description</th>
+                <th>Presenter</th>
+                <th>Price</th>
+              </tr>
+            </thead>
+            <tbody>
+              {events.map((event) => (
+                <tr key={event._id}>
+                  <td>{event.EventId}</td>
+                  <td>{event.titleE}</td>
+                  <td>{event.venueId}</td>
+                  <td>{event.date}</td>
+                  <td>{event.descriptionE}</td>
+                  <td>{event.presenterE}</td>
+                  <td>{event.price}</td>
+                  <td>
+                    <Button variant="primary" onClick={() => handleUpdateEvent(event._id)}>Update</Button>
+                    <Button variant="danger" onClick={() => handleDeleteEvent(event._id)}>Delete</Button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </Table>
+        </Col>
+      </Row>
 
-      <h2>User Management</h2>
-      <form>
-        <label>Username:</label>
-        <input type="text" name="username" value={newUser.username} onChange={handleInputUserChange} />
-        <label>Password:</label>
-        <input type="password" name="password" value={newUser.password} onChange={handleInputUserChange} />
-        <button type="button" onClick={handleCreateUser}>
-          Create User
-        </button>
-      </form>
-      <table>
-        <thead>
-          <tr>
-            <th>Username</th>
-            <th>Password</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          {users.map((user) => (
-            <tr key={user._id}>
-              <td>{user.username}</td>
-              <td>{user.password}</td>
-              <td>
-                <button type="button" onClick={() => handleUpdateUser(user._id)}>
-                  Update
-                </button>
-                <button type="button" onClick={() => handleDeleteUser(user._id)}>
-                  Delete
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+      <Card className="mb-4">
+        <Card.Body>
+          <Card.Title>User Management</Card.Title>
+          <Form>
+            <Form.Group as={Row} className="mb-3">
+              <Form.Label column sm={2}>Username:</Form.Label>
+              <Col sm={10}>
+                <Form.Control type="text" name="username" value={newUser.username} onChange={handleInputUserChange} />
+              </Col>
+            </Form.Group>
+            <Form.Group as={Row} className="mb-3">
+              <Form.Label column sm={2}>Password:</Form.Label>
+              <Col sm={10}>
+                <Form.Control type="password" name="password" value={newUser.password} onChange={handleInputUserChange} />
+              </Col>
+            </Form.Group>
+            <Button variant="success" className="mt-3" onClick={handleCreateUser}>
+              Create User
+            </Button>
+          </Form>
+        </Card.Body>
+      </Card>
+
+      <Row>
+        <Col>
+          <Table striped bordered hover responsive>
+            <thead>
+              <tr>
+                <th>Username</th>
+                <th>Password</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {users.map((user) => (
+                <tr key={user._id}>
+                  <td>{user.username}</td>
+                  <td>{user.password}</td>
+                  <td>
+                    <Button variant="primary" onClick={() => handleUpdateUser(user._id)}>Update</Button>
+                    <Button variant="danger" onClick={() => handleDeleteUser(user._id)}>Delete</Button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </Table>
+        </Col>
+      </Row>
+    </Container>
   );
 };
 
