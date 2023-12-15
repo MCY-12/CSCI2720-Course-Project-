@@ -1,8 +1,6 @@
-// Admin.js
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-
 
 
 const Admin = () => {
@@ -39,15 +37,24 @@ const Admin = () => {
     navigate('/'); // Redirect to the login page
   };
 
+  const getAuthHeader = () => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      return { Authorization: `Bearer ${token}` };
+    } else {
+      return {};
+    }
+  };
+
 
   // Event management methods
   // Read
   const fetchEvents = async () => {
     try {
-      const response = await axios.get('/admin/showevents');
+      const response = await axios.get('http://localhost:3001/admin/showevents', { headers: getAuthHeader() });
       setEvents(response.data);
     } catch (error) {
-      console.error('Error fetching events:', error);
+      console.error('Error fetching events:', error.response?.data || error.message);
     }
   };
 
@@ -62,7 +69,7 @@ const Admin = () => {
   // Create
   const handleCreateEvent = async () => {
     try {
-      await axios.post('/admin/showevent', newEvent);
+      await axios.post('http://localhost:3001/admin/showevent', newEvent, { headers: getAuthHeader() });
       fetchEvents();
       setNewEvent({
         EventId: '',
@@ -74,7 +81,7 @@ const Admin = () => {
         price: '',
       });
     } catch (error) {
-      console.error('Error creating event:', error);
+      console.error('Error creating event:', error.response?.data || error.message);
     }
   };
 
@@ -82,7 +89,7 @@ const Admin = () => {
   // Update
   const handleUpdateEvent = async (eventId) => {
     try {
-      await axios.put(`/admin/showevent/${eventId}`, newEvent);
+      await axios.put(`http://localhost:3001/admin/showevent/${eventId}`, newEvent, { headers: getAuthHeader() });
       fetchEvents();
       setNewEvent({
         EventId: '',
@@ -94,17 +101,17 @@ const Admin = () => {
         price: '',
       });
     } catch (error) {
-      console.error('Error updating event:', error);
+      console.error('Error updating event:', error.response?.data || error.message);
     }
   };
 
   // Delete
   const handleDeleteEvent = async (eventId) => {
     try {
-      await axios.delete(`/admin/showevent/${eventId}`);
+      await axios.delete(`http://localhost:3001/admin/showevent/${eventId}`, { headers: getAuthHeader() });
       fetchEvents();
     } catch (error) {
-      console.error('Error deleting event:', error);
+      console.error('Error deleting event:', error.response?.data || error.message);
     }
   };
 
@@ -112,10 +119,10 @@ const Admin = () => {
   // Read
   const fetchUsers = async () => {
     try {
-      const response = await axios.get('/admin/users');
+      const response = await axios.get('http://localhost:3001/admin/users', { headers: getAuthHeader() });
       setUsers(response.data);
     } catch (error) {
-      console.error('Error fetching users:', error);
+      console.error('Error fetching users:', error.response?.data || error.message);
     }
   };
 
@@ -130,38 +137,38 @@ const Admin = () => {
   // Create
   const handleCreateUser = async () => {
     try {
-      await axios.post('/admin/user', newUser);
+      await axios.post('http://localhost:3001/admin/user', newUser, { headers: getAuthHeader() });
       fetchUsers();
       setNewUser({
         username: '',
         password: '',
       });
     } catch (error) {
-      console.error('Error creating user:', error);
+      console.error('Error creating user:', error.response?.data || error.message);
     }
   };
 
   // Update
   const handleUpdateUser = async (userId) => {
     try {
-      await axios.put(`/admin/user/${userId}`, newUser);
+      await axios.put(`http://localhost:3001/admin/user/${userId}`, newUser, { headers: getAuthHeader() });
       fetchUsers();
       setNewUser({
         username: '',
         password: '',
       });
     } catch (error) {
-      console.error('Error updating user:', error);
+      console.error('Error updating user:', error.response?.data || error.message);
     }
   };
 
   // Delete
   const handleDeleteUser = async (userId) => {
     try {
-      await axios.delete(`/admin/user/${userId}`);
+      await axios.delete(`http://localhost:3001/admin/user/${userId}`, { headers: getAuthHeader() });
       fetchUsers();
     } catch (error) {
-      console.error('Error deleting user:', error);
+      console.error('Error deleting user:', error.response?.data || error.message);
     }
   };
 
