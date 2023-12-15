@@ -5,6 +5,7 @@ import { Navbar, Nav, NavDropdown, Table, Dropdown, DropdownButton, Offcanvas, F
 import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Link, useParams } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 
 import axios from 'axios';
 
@@ -54,51 +55,63 @@ import { FilePerson, ForwardFill, FilterCircle, Heart, HeartFill } from 'react-b
 import { GoogleMap, Marker } from "@react-google-maps/api";
 
 const MapContainer = ({ locations, selectedVenueCoords }) => {
-    const mapStyles = {        
-        height: "400px",
-        width: "100%"
-    };
+  const mapStyles = {        
+      height: "400px",
+      width: "100%"
+  };
 
-    const defaultCenter = {
-        lat: 22.3193, lng: 114.1694  // Default Hong Kong's coordinates
-    };
-
-    return (
-        <div>
-            {window.google && (
-                <GoogleMap
-                    mapContainerStyle={mapStyles}
-                    zoom={13}
-                    center={selectedVenueCoords || defaultCenter}
-                >
-                    {locations.map(item => (
-                        <Marker key={item.venueId}
-                            position={{lat: parseFloat(item.latitude), lng: parseFloat(item.longitude)}}
-                            onClick={() => window.location.href=`/location/${item.venueId}`}
-                        />
-                    ))}
-                </GoogleMap>
-            )}
-        </div>
-    );
+  const defaultCenter = {
+      lat: 22.3193, lng: 114.1694  // Default Hong Kong's coordinates
+  };
+  console.log(locations);
+  return (
+      <div>
+          {window.google && (
+              <GoogleMap
+                  mapContainerStyle={mapStyles}
+                  zoom={13}
+                  center={selectedVenueCoords || defaultCenter}
+              >
+                  {locations.map(item => (
+                      <Marker key={item.venueId}
+                          position={{lat: parseFloat(item.latitude), lng: parseFloat(item.longitude)}}
+                          onClick={() => window.location.href=`/location/${item.venueId}`}
+                      />
+                  ))}
+              </GoogleMap>
+          )}
+      </div>
+  );
 };
+
 // const getUserInfo = () => {
 //   const userInfo = localStorage.getItem('userInfo');
 //   return userInfo ? JSON.parse(userInfo) : null;
 // };
 // const userInfo = getUserInfo();
 function Location() {
+  
+  const location = useLocation();
   const [userInfo, setUserInfo] = useState(null);
   const [newComment, setNewComment] = useState('');
   useEffect(() => {
-    const storedUserInfo = localStorage.getItem('userInfo');
-    if (storedUserInfo) {
-      setUserInfo(JSON.parse(storedUserInfo));
+    // First, try to get userInfo from localStorage
+    let storedUserInfo = localStorage.getItem('userInfo');
+
+    // If not found in localStorage, try to get from sessionStorage
+    if (!storedUserInfo) {
+        storedUserInfo = sessionStorage.getItem('userInfo');
     }
-  }, []);
+
+    // If userInfo is found, update the state
+    if (storedUserInfo) {
+        setUserInfo(JSON.parse(storedUserInfo));
+    }
+}, []);
   const [venueComments, setVenueComments] = useState([]);
   const [selectedVenueCoords, setSelectedVenueCoords] = useState(null);
   const navigate = useNavigate();
+
   //For the Index offcanvas menu
   const [isOpen, setIsOpen] = useState(false);
   const handleClose = () => setIsOpen(false);

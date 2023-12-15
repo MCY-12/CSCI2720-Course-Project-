@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Form, Button, Alert } from 'react-bootstrap';
+import { Container, Row, Form, Button, Alert } from 'react-bootstrap';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
@@ -61,12 +61,12 @@ const Login = ({ setIsLoggedIn, setIsAdmin }) => {
 
   return (
     <div className="d-flex justify-content-center align-items-center" style={{height: "100vh"}}>
-      <container fluid>
-        <row>
+      <Container fluid >
+        <Row >
           <h1 className='text-center fw-bold'>User Login</h1>
-        </row>
+        </Row>
         {message && <Alert variant={error ? 'danger' : 'success'}>{message}</Alert>}
-        <row className='text-center'>
+        <Row className='text-center justify-content-center' md={4}>
           <Form>
             {/* Username input */}
             <Form.Group className="mb-3" controlId="formBasicUsername">
@@ -108,9 +108,9 @@ const Login = ({ setIsLoggedIn, setIsAdmin }) => {
               Register
             </Button>
           </Form>
-        </row>
-      </container>
-    </div>
+        </Row>
+      </Container>
+     </div>
   );
 };
 
