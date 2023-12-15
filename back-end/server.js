@@ -434,10 +434,10 @@ app.get('/events/price/:maxPrice', async (req, res) => {
 });
 
 // Create a POST endpoint for creating comments
-app.post('/comments', authMiddleware, async (req, res) => {
+app.post('/comments', verifyToken, async (req, res) => {
 	try {
 		const { content, eventId } = req.body;
-		const userId = req.user._id; // from auth middleware	  
+		const userId = req.user._id; // from verifyToken	  
 		const comment = new Comment({
 			content,
 			user: userId, 
