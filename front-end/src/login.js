@@ -47,40 +47,50 @@ const Login = ({ setIsLoggedIn, setIsAdmin }) => {
   };
 
   return (
-    <div>
-      <h1>Login Form</h1>
-      {message && <Alert variant={error ? 'danger' : 'success'}>{message}</Alert>}
-      <Form>
-        {/* Username input */}
-        <Form.Group className="mb-3" controlId="formBasicUsername">
-          <Form.Label>Username</Form.Label>
-          <Form.Control
-            type="text"
-            placeholder="Enter your username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-          />
-        </Form.Group>
+    <div className="d-flex justify-content-center align-items-center" style={{height: "100vh"}}>
+      <container fluid>
+        <row>
+          <h1 className='text-center fw-bold'>User Login</h1>
+        </row>
+        {message && <Alert variant={error ? 'danger' : 'success'}>{message}</Alert>}
+        <row className='text-center'>
+          <Form>
+            {/* Username input */}
+            <Form.Group className="mb-3" controlId="formBasicUsername">
+              
+                <Form.Label>Username:</Form.Label>
+                <Form.Control 
+                  type="text"
+                  placeholder="Enter your username"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  style={{textAlign: "center"}}
+                />
+              
+            </Form.Group>
 
-        {/* Password input */}
-        <Form.Group className="mb-3" controlId="formBasicPassword">
-          <Form.Label>Password</Form.Label>
-          <Form.Control
-            type="password"
-            placeholder="Enter your password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-        </Form.Group>
+            {/* Password input */}
+            <Form.Group className="mb-3" controlId="formBasicPassword">
+              <Form.Label>Password:</Form.Label>
+              <Form.Control
+                type="password"
+                placeholder="Enter your password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                style={{textAlign: "center"}}
+              />
+            </Form.Group>
 
-        {/* Login register */}
-        <Button onClick={() => handleLogin(username, password)}>
-          Login
-        </Button>
-        <Button variant="primary" type="button" onClick={handleRegister}>
-          Register
-        </Button>
-      </Form>
+            {/* Login register */}
+            <Button className='mx-1' onClick={() => handleLogin(username, password)}>
+              Login
+            </Button>
+            <Button className='mx-1' variant="primary" type="button" onClick={handleRegister}>
+              Register
+            </Button>
+          </Form>
+        </row>
+      </container>
     </div>
   );
 };
