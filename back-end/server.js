@@ -9,8 +9,6 @@ const jwt = require('jsonwebtoken');
 const app = express();
 //original 3000
 const port = 3001;
-// Use CORS middleware
-app.use(cors());
 
 const parser = new xml2js.Parser();
 const bcrypt = require('bcrypt');
@@ -75,6 +73,36 @@ const Comment = mongoose.model('Comment', commentSchema);
 
 let selectedVenueIds = [];
 
+async function createDefaultAdmin() {
+	try {
+	  // Check if an admin user already exists
+	  const adminExists = await User.findOne({ username: 'admin' });
+	  if (adminExists) {
+		console.log('Admin user already exists.');
+		return;
+	  }
+  
+	  // Hash the password
+	  const hashedPassword = await bcrypt.hash('admin', saltRounds);
+  
+	  // Create a new admin user
+	  const adminUser = new User({
+		username: 'admin',
+		password: hashedPassword,
+		isAdmin: true,
+		favorites: []
+	  });
+  
+	  // Save the admin user to the database
+	  await adminUser.save();
+	  console.log('Admin user created successfully.');
+	} catch (error) {
+	  console.error('Error creating admin user:', error);
+	}
+  }
+
+  // Call the function to create a default admin if it doesn't exist
+createDefaultAdmin();
 
 async function processVenueData(eventXml) {
     const venueResponse = await axios.get('https://www.lcsd.gov.hk/datagovhk/event/venues.xml');
