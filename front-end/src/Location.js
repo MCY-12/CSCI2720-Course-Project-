@@ -516,12 +516,12 @@ const handleLocationFetch = () => {
       <Container fluid className="mx-3 pb-4 bg-light">
           {locationData && locationData.venue && locationData.events && (
             <div>
-              <row>
+              <div style={{ display: 'flex', alignItems:'center' }}>
+                <h2 className="my-2 pt-2 fw-bold">{locationData.venue.venueNameE}</h2>
                 <Button className="mt-2 mx-3" variant="outline-danger" onClick={handleFavouriteClick} >
                   {isFavourite ? <HeartFill size={24} /> : <Heart size={24} />}
                 </Button>
-                <h2 className="my-2 pt-2 fw-bold">{locationData.venue.venueNameE}</h2>
-              </row>
+              </div>
               <h4 className="mt-4 fw-bold">Events:</h4>
               <Stack direction="horizontal" gap={3}>
                 <InputGroup className="my-2 mx-3" style={{maxWidth: "500px"}}>
