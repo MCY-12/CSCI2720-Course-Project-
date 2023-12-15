@@ -89,13 +89,14 @@ const MapContainer = ({ locations, selectedVenueCoords }) => {
 // const userInfo = getUserInfo();
 function Location() {
   const [userInfo, setUserInfo] = useState(null);
+  const [newComment, setNewComment] = useState('');
   useEffect(() => {
     const storedUserInfo = localStorage.getItem('userInfo');
     if (storedUserInfo) {
       setUserInfo(JSON.parse(storedUserInfo));
     }
   }, []);
-  
+  const [venueComments, setVenueComments] = useState([]);
   const [selectedVenueCoords, setSelectedVenueCoords] = useState(null);
   const navigate = useNavigate();
   //For the Index offcanvas menu
@@ -185,7 +186,41 @@ function Location() {
         navigate('/'); // Redirect to the login page
     };
     
-
+    const handleAddComment = () => {
+      const token = localStorage.getItem('token'); // Retrieve the token
+      const commentData = {
+          content: newComment,
+          venueId: venueId
+      };
+  
+      fetch('http://localhost:3001/comments', {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json',
+              'Authorization': token // Include the token in the Authorization header
+          },
+          body: JSON.stringify(commentData)
+      })
+      .then(response => {
+          if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          return response.json();
+      })
+      .then(data => {
+          setNewComment('');
+          // Refresh comments or update UI here
+          fetchComments();
+      })
+      .catch(error => {
+        if (error.name === "SyntaxError") {
+          console.error("Response not in JSON format:", error);
+      } else {
+          console.error('Error adding comment:', error);
+      }
+      });
+  };
+  
   
   //By 1155189480
   //To fix the width of the offcanvas and take up entire screen at some point
@@ -222,6 +257,15 @@ function Location() {
         .then(response => response.json())
         .then(data => setLocationData(data))
         .catch(error => console.error(error));
+    }, [venueId]);
+
+    useEffect(() => {
+      fetch(`http://localhost:3001/venue/${venueId}/comments`)
+          .then(response => response.json())
+          .then(data => {
+              setVenueComments(data); // Assuming you have a state variable for this
+          })
+          .catch(error => console.error('Error fetching comments:', error));
     }, [venueId]);
 
 //Nav Bar Search based on back-end search-venues
@@ -307,6 +351,19 @@ const unfavoriteVenue = (venueId) => {
       })
       .catch(error => console.error(error));
 };
+
+const fetchComments = () => {
+  fetch(`http://localhost:3001/venue/${venueId}/comments`)
+      .then(response => response.json())
+      .then(data => {
+          setVenueComments(data);
+      })
+      .catch(error => console.error('Error fetching comments:', error));
+};
+
+useEffect(() => {
+  fetchComments();
+}, [venueId]); // Fetch comments when the component mounts or venueId changes
 
  //after login. if user not admin then return this:
 
@@ -458,18 +515,28 @@ const unfavoriteVenue = (venueId) => {
                     </Container>
 
                 ))}
-              <Container fluid>
                 <Container fluid className="border bg-secondary text-light">
-                  <Row>
-                    <h4 className="my-2 fw-bold">Comments:</h4>
-                    <p>This bg color kinda ugly ngl, and bootstrap color options kinda sucks</p>
-                    <p>Maybe I'll change the color manually using css later</p>
-                    <p>Everyone feel free to experiment and find a color u like :)</p>
-                  </Row>
+                    <Row>
+                        <h4 className="my-2 fw-bold">Comments:</h4>
+                        {venueComments && venueComments.map(comment => (
+                            <Row key={comment._id}>
+                                <p>{comment.user.username}: {comment.content}</p>
+                            </Row>
+                        ))}
+                    </Row>
+                    <Form>
+    <Form.Group>
+        <Form.Label>Add a Comment</Form.Label>
+        <Form.Control 
+            as="textarea" 
+            rows={3} 
+            value={newComment} 
+            onChange={(e) => setNewComment(e.target.value)}
+        />
+    </Form.Group>
+    <Button onClick={handleAddComment}>Submit Comment</Button>
+</Form>
                 </Container>
-                
-            
-              </Container>
               
             </div>
           )}

@@ -64,11 +64,11 @@ const userSchema = new mongoose.Schema({
 const User = mongoose.model('User', userSchema);
 
 const commentSchema = new mongoose.Schema({
-	content: String,
-	user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-	event: { type: mongoose.Schema.Types.ObjectId, ref: 'Event' },
-	postedAt: { type: Date, default: Date.now },
-	// Add other relevant fields
+    content: String,
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    venue: { type: mongoose.Schema.Types.ObjectId, ref: 'Venue' }, // Linking comment to venue
+    postedAt: { type: Date, default: Date.now },
+    // Add other relevant fields if needed
 });
 
 const Comment = mongoose.model('Comment', commentSchema);
@@ -434,20 +434,45 @@ app.get('/events/price/:maxPrice', async (req, res) => {
 });
 
 // Create a POST endpoint for creating comments
+// app.post('/comments', verifyToken, async (req, res) => {
+// 	try {
+// 		const { content, eventId } = req.body;
+// 		const userId = req.user._id; // from verifyToken	  
+// 		const comment = new Comment({
+// 			content,
+// 			user: userId, 
+// 			event: eventId
+// 	  	});
+// 	  	await comment.save();
+// 	  	res.status(201).json(comment);  
+// 	} catch (error) {
+// 		res.status(500).json({ message: 'Error fetching comments', error: error.message });
+// 	}
+// });
+
 app.post('/comments', verifyToken, async (req, res) => {
-	try {
-		const { content, eventId } = req.body;
-		const userId = req.user._id; // from verifyToken	  
-		const comment = new Comment({
-			content,
-			user: userId, 
-			event: eventId
-	  	});
-	  	await comment.save();
-	  	res.status(201).json(comment);  
-	} catch (error) {
-		res.status(500).json({ message: 'Error fetching comments', error: error.message });
-	}
+    try {
+        const { content, venueId } = req.body;
+        const userId = req.user.id; // from verifyToken
+
+        // Find the venue using the custom venueId
+        const venue = await Venue.findOne({ venueId: venueId });
+        if (!venue) {
+            return res.status(404).json({ message: 'Venue not found' });
+        }
+		// console.log(userId);
+        // Create a new comment with the ObjectId of the found venue
+        const comment = new Comment({
+            content,
+            user: userId,
+            venue: venue._id // Using the ObjectId of the venue
+        });
+        await comment.save();
+        res.status(201).json(comment);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error creating comment', error: error.message });
+    }
 });
 
 // GET /events/:eventId
@@ -468,6 +493,24 @@ app.get('/events/:eventId', async (req, res) => {
 	  	res.status(500).send('Error fetching event'); 
 	}
   });
+
+app.get('/venue/:venueId/comments', async (req, res) => {
+    try {
+        const venueId = req.params.venueId;
+		// Find the venue using the custom venueId
+		const venue = await Venue.findOne({ venueId: venueId });
+		if (!venue) {
+			return res.status(404).json({ message: 'Venue not found' });
+		}
+        const comments = await Comment.find({ venue: venue._id })
+            .populate('user', 'username'); // Assuming 'username' field in 'User' model
+
+        res.json(comments);
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Error fetching comments for venue');
+    }
+});
 
 function generateToken(user) {
     // Ensure you have a secret key to sign the JWT
