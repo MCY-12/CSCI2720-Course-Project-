@@ -575,26 +575,30 @@ const handleLocationFetch = () => {
                 </Container>
               ))}
               <Container fluid className="mt-3 border bg-secondary text-light">
-                <Row>
-                    <h4 className="my-2 fw-bold">Comments:</h4>
-                    {venueComments && venueComments.map(comment => (
-                      <Row key={comment._id}>
-                          <p>{comment.user.username}: {comment.content}</p>
-                      </Row>
-                    ))}
-                </Row>
-                <Form>
+                <h2 className="mt-3 mb-2 fw-bold">Comments</h2>
+                <hr />
+                <Form className='ms-2'>
                   <Form.Group>
-                    <Form.Label>Add a Comment</Form.Label>
+                    <Form.Label className='fw-bold'>Add a Comment: </Form.Label>
                     <Form.Control 
                       as="textarea" 
                       rows={3} 
                       value={newComment} 
+                      placeholder="Enter your comment here"
                       onChange={(e) => setNewComment(e.target.value)}
                     />
                   </Form.Group>
-                  <Button className="mt-2 mb-3" onClick={handleAddComment}>Submit Comment</Button>
+                  <Button className="mt-2 mb-4 fw-bold" variant='success' onClick={handleAddComment}>Submit Comment</Button>
                 </Form>
+                <Row>
+                  <h5 className="mt-2 ms-3">{venueComments.length} Comments</h5>
+                  <hr />
+                  {venueComments && venueComments.map(comment => (
+                    <Row key={comment._id}>
+                        <p className='ms-5'><strong>{comment.user.username}:</strong> {comment.content}</p>
+                    </Row>
+                  ))}
+                </Row>
               </Container>
             </div>
           )}
