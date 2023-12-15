@@ -1,3 +1,18 @@
+	
+The Chinese University of Hong Kong places very high importance on honesty in academic work submitted by students, and adopts a policy of zero tolerance on academic dishonesty. While "academic dishonesty" is the overall name, there are several sub-categories as follows:
+
+(i)	Plagiarism
+(ii)	Undeclared multiple submissions
+(iii)	Employing or using services provided by a third party to undertake ones’ submitted work, or providing services as a third party
+(iv)	Distribution/ Sharing/ Copying of teaching materials without the consent of the course teachers to gain unfair academic advantage in the courses
+(v)	Violating rules 15 or 16 of the University's Examination Rules (Annex 1) or rule 9 or 10 of the University's Online Examination Rules (Annex 2)
+(vi)	Cheating in tests and examinations (including violation of rules 17 or 18 of the University’s Examination Rules or rule 11, 12, 13, 14 or 16 of the University's Online Examination Rules)
+(vii)	Impersonation fraud in tests and examinations (including violation of rule 19 of the University's Examination Rules or rule 15 of the University's Online Examination Rules)
+(viii)	All other acts of academic dishonesty
+Any related offence will lead to disciplinary action including termination of studies at the University.
+
+Everyone should make himself/herself familiar with the content of this website and thereby help avoid any practice that would not be acceptable.
+
 # Project Name
 
 CSCI2720 Project
