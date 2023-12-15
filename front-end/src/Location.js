@@ -533,7 +533,6 @@ const handleLocationFetch = () => {
                 </Button>
                 <h2 className="my-2 pt-2 fw-bold">{locationData.venue.venueNameE}</h2>
               </row>
-              <p>Description of location here</p>
               <h4 className="mt-4 fw-bold">Events:</h4>
               {locationData.events.map((event, index) => (
                 <Container className="mt-2 ms-3" key={index}>   
