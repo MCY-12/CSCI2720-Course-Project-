@@ -32,10 +32,14 @@ const Admin = () => {
   const navigate = useNavigate();
 
   const handleLogout = () => {
+    //setIsLoggedIn(false);
+    //setIsAdmin(false);
     localStorage.removeItem('token');
     localStorage.removeItem('userInfo');
-    navigate('/'); // Redirect to the login page
-  };
+    sessionStorage.removeItem('token');
+    sessionStorage.removeItem('userInfo');
+    navigate('/'); // Redirect to the login page
+  };
 
   const getAuthHeader = () => {
     const token = localStorage.getItem('token') || sessionStorage.getItem('token');
