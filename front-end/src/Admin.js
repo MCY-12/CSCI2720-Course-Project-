@@ -179,16 +179,20 @@ const Admin = () => {
   // Component render
   return (
     <Container fluid className="py-4">
-      <Row className="mb-4">
-        <Col>
+      <Row className="mb-2">
+        <Col className='d-flex justify-content-end'>
           <Button variant="outline-danger" onClick={handleLogout}>Logout</Button>
         </Col>
+        <Col className=''>
+          <h3 className='fw-bold'>Admin Page</h3>
+        </Col>
       </Row>
+      <hr/>
 
       <Card className="mb-4">
         <Card.Body>
-          <Card.Title>Event Management</Card.Title>
-          <Form>
+          <Card.Title className='fw-bold fs-3'>Event Management</Card.Title>
+          <Form className='pt-3 ps-3'>
             <Form.Group as={Row} className="mb-3">
               <Form.Label column sm={2}>Event ID:</Form.Label>
               <Col sm={10}>
@@ -228,10 +232,10 @@ const Admin = () => {
             <Form.Group as={Row} className="mb-3">
               <Form.Label column sm={2}>Price:</Form.Label>
               <Col sm={10}>
-                <Form.Control type="text" name="price" value={newEvent.price} onChange={handleInputEventChange} onChange={handleInputEventChange} />
+                <Form.Control type="text" name="price" value={newEvent.price} onChange={handleInputEventChange}/>
               </Col>
             </Form.Group>
-            <Button variant="success" className="mt-3" onClick={handleCreateEvent}>
+            <Button variant="success" className="mt-3 fw-bold" onClick={handleCreateEvent}>
               Create Event
             </Button>
           </Form>
@@ -250,6 +254,7 @@ const Admin = () => {
                 <th>Description</th>
                 <th>Presenter</th>
                 <th>Price</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -263,8 +268,8 @@ const Admin = () => {
                   <td>{event.presenterE}</td>
                   <td>{event.price}</td>
                   <td>
-                    <Button variant="primary" onClick={() => handleUpdateEvent(event._id)}>Update</Button>
-                    <Button variant="danger" onClick={() => handleDeleteEvent(event._id)}>Delete</Button>
+                    <Button variant="primary" className="mb-1" onClick={() => handleUpdateEvent(event._id)}>Update</Button>
+                    <Button variant="outline-danger" onClick={() => handleDeleteEvent(event._id)}>Delete</Button>
                   </td>
                 </tr>
               ))}
@@ -275,8 +280,8 @@ const Admin = () => {
 
       <Card className="mb-4">
         <Card.Body>
-          <Card.Title>User Management</Card.Title>
-          <Form>
+          <Card.Title className='fw-bold fs-3 pb-2'>User Management</Card.Title>
+          <Form className='ms-3'>
             <Form.Group as={Row} className="mb-3">
               <Form.Label column sm={2}>Username:</Form.Label>
               <Col sm={10}>
@@ -289,7 +294,7 @@ const Admin = () => {
                 <Form.Control type="password" name="password" value={newUser.password} onChange={handleInputUserChange} />
               </Col>
             </Form.Group>
-            <Button variant="success" className="mt-3" onClick={handleCreateUser}>
+            <Button variant="success" className="mt-2 fw-bold" onClick={handleCreateUser}>
               Create User
             </Button>
           </Form>
@@ -303,7 +308,7 @@ const Admin = () => {
               <tr>
                 <th>Username</th>
                 <th>Password</th>
-                <th>Action</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -312,8 +317,8 @@ const Admin = () => {
                   <td>{user.username}</td>
                   <td>{user.password}</td>
                   <td>
-                    <Button variant="primary" onClick={() => handleUpdateUser(user._id)}>Update</Button>
-                    <Button variant="danger" onClick={() => handleDeleteUser(user._id)}>Delete</Button>
+                    <Button variant="primary" className="me-1" onClick={() => handleUpdateUser(user._id)}>Update</Button>
+                    <Button variant="outline-danger" onClick={() => handleDeleteUser(user._id)}>Delete</Button>
                   </td>
                 </tr>
               ))}
