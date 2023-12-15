@@ -70,7 +70,6 @@ const MapContainer = ({ locations, selectedVenueCoords, navigate }) => {
   const defaultCenter = {
       lat: 22.3193, lng: 114.1694  // Default Hong Kong's coordinates
   };
-  console.log(locations);
   return (
       <div>
           {window.google && (
@@ -197,7 +196,10 @@ function Location() {
 const handleLocationFetch = () => {
   fetch(`http://localhost:3001/location/${venueId}`)
   .then(response => response.json())
-  .then(data => setLocationData(data))
+  .then(data => {
+    setLocationData(data);
+    setPriceInput(''); // Reset price input to empty
+})
   .catch(error => console.error(error));
 };
   
@@ -557,6 +559,7 @@ const handleLocationFetch = () => {
                     value={priceInput}
                     onChange={(e) => setPriceInput(e.target.value)}
                   />
+                  <Button variant='success' onClick={handleLocationFetch}>Reset</Button>
                 </InputGroup>
               </Stack>
               {locationData.events.map((event, index) => (
