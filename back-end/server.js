@@ -433,6 +433,42 @@ app.get('/events/price/:maxPrice', async (req, res) => {
 	}
 });
 
+// Create a POST endpoint for creating comments
+app.post('/comments', authMiddleware, async (req, res) => {
+	try {
+		const { content, eventId } = req.body;
+		const userId = req.user._id; // from auth middleware	  
+		const comment = new Comment({
+			content,
+			user: userId, 
+			event: eventId
+	  	});
+	  	await comment.save();
+	  	res.status(201).json(comment);  
+	} catch (error) {
+		res.status(500).json({ message: 'Error fetching comments', error: error.message });
+	}
+});
+
+// GET /events/:eventId
+app.get('/events/:eventId', async (req, res) => {
+	try {
+		const eventId = req.params.eventId;
+	  	const event = await Event.findById(eventId)
+			.populate({
+		  	path: 'comments',
+		  	populate: {
+				path: 'user',
+				model: 'User' 
+		  	}
+			});
+	  	res.json(event); 
+	} catch (error) {
+	  	console.error(error);
+	  	res.status(500).send('Error fetching event'); 
+	}
+  });
+
 function generateToken(user) {
     // Ensure you have a secret key to sign the JWT
     const secretKey = 'UDcuPgXEaN8Y8K'; // Replace with your secret key
