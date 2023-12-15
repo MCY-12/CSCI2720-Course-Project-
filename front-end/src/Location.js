@@ -127,7 +127,16 @@ function Location() {
 
   //For Index offcanvas table number of events sort
   const [indexData, setIndexData] = useState([]);
+  //For collapsing the events when clicked
+  const [collapseOpen, setCollapseOpen] = useState([]);
 
+  const handleCollapseClick = (index) => {
+    setCollapseOpen(prevOpen => {
+      const newOpen = [...prevOpen];
+      newOpen[index] = !newOpen[index];
+      return newOpen;
+    });
+  }
 
 
   const [venuesData, setVenuesData] = useState([]);
@@ -196,58 +205,57 @@ const handleLocationFetch = () => {
     let queryUrl = `http://localhost:3001/events/price/${eventKey.toLowerCase()}/${priceInput}/${locationData.venue.venueId}`;
 
     fetch(queryUrl)
-        .then(response => response.json())
-        .then(filteredEvents => {
-            setLocationData({ ...locationData, events: filteredEvents });
-        })
-        .catch(error => console.error('Error fetching filtered events:', error));
-};
+    .then(response => response.json())
+    .then(filteredEvents => {
+        setLocationData({ ...locationData, events: filteredEvents });
+    })
+    .catch(error => console.error('Error fetching filtered events:', error));
+  };
 
-
-
-    const handleLogout = () => {
-        setIsLoggedIn(false);
-        setIsAdmin(false);
-        localStorage.removeItem('token');
-        localStorage.removeItem('userInfo');
-        sessionStorage.removeItem('token');
-        sessionStorage.removeItem('userInfo');
-        navigate('/'); // Redirect to the login page
-    };
+  const handleLogout = () => {
+    setIsLoggedIn(false);
+    setIsAdmin(false);
+    localStorage.removeItem('token');
+    localStorage.removeItem('userInfo');
+    sessionStorage.removeItem('token');
+    sessionStorage.removeItem('userInfo');
+    navigate('/'); // Redirect to the login page
+  };
     
-    const handleAddComment = () => {
-      const token = localStorage.getItem('token'); // Retrieve the token
-      const commentData = {
-          content: newComment,
-          venueId: venueId
-      };
-  
-      fetch('http://localhost:3001/comments', {
-          method: 'POST',
-          headers: {
-              'Content-Type': 'application/json',
-              'Authorization': token // Include the token in the Authorization header
-          },
-          body: JSON.stringify(commentData)
-      })
-      .then(response => {
-          if (!response.ok) {
-              throw new Error(`HTTP error! status: ${response.status}`);
-          }
-          return response.json();
-      })
-      .then(data => {
-          setNewComment('');
-          // Refresh comments or update UI here
-          fetchComments();
-      })
-      .catch(error => {
-        if (error.name === "SyntaxError") {
-          console.error("Response not in JSON format:", error);
-      } else {
-          console.error('Error adding comment:', error);
+  const handleAddComment = () => {
+    const token = localStorage.getItem('token'); // Retrieve the token
+    const commentData = {
+      content: newComment,
+      venueId: venueId
+    };
+
+    fetch('http://localhost:3001/comments', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': token // Include the token in the Authorization header
+      },
+      body: JSON.stringify(commentData)
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-      });
+      return response.json();
+    })
+    .then(data => {
+      setNewComment('');
+      // Refresh comments or update UI here
+      fetchComments();
+    })
+    .catch(error => {
+      if (error.name === "SyntaxError") {
+        console.error("Response not in JSON format:", error);
+      } 
+      else {
+        console.error('Error adding comment:', error);
+      }
+    });
   };
   
   
@@ -257,45 +265,42 @@ const handleLocationFetch = () => {
   const [profileWidth, setProfileWidth] = useState();
   
   useEffect(() => {
-      const handleResize = () => {
-          if (window.innerWidth < window.screen.width * 0.35)
-          setProfileWidth('100%');
-        else
+    const handleResize = () => {
+      if (window.innerWidth < window.screen.width * 0.35)
+        setProfileWidth('100%');
+      else
         setProfileWidth(window.screen.width * 0.35);
-    
-    if (window.innerWidth < window.screen.width * 0.75)
+  
+      if (window.innerWidth < window.screen.width * 0.75)
         setIndexWidth('100%');
-    else
-    setIndexWidth(window.screen.width * 0.75);
+      else
+        setIndexWidth(window.screen.width * 0.75);
     };
-
     window.addEventListener('resize', handleResize);
-
     handleResize();
-
     return () => window.removeEventListener('resize', handleResize);
-    }, []);
+  }, []);
 
-    //To fetch location data by venueId
-    const [locationData, setLocationData] = useState([]); //using for location
-    const { venueId } = useParams();
-    //   console.log(venueId);
+  //To fetch location data by venueId
+  const [locationData, setLocationData] = useState([]); //using for location
+  const { venueId } = useParams();
+  //   console.log(venueId);
 
-    useEffect(() => {
-        fetch(`http://localhost:3001/location/${venueId}`)
-        .then(response => response.json())
-        .then(data => setLocationData(data))
-        .catch(error => console.error(error));
-    }, [venueId]);
+  useEffect(() => {
+    fetch(`http://localhost:3001/location/${venueId}`)
+    .then(response => response.json())
+    .then(data => setLocationData(data))
+    .catch(error => console.error(error));
+  }, [venueId]);
 
-    // useEffect(() => {
-    //   fetch(`http://localhost:3001/venue/${venueId}/comments`)
-    //       .then(response => response.json())
-    //       .then(data => {
-    //           setVenueComments(data); // Assuming you have a state variable for this
-    //       })
-    //       .catch(error => console.error('Error fetching comments:', error));
-    // }, [venueId]);
+  // useEffect(() => {
+  //   fetch(`http://localhost:3001/venue/${venueId}/comments`)
+  //       .then(response => response.json())
+  //       .then(data => {
+  //           setVenueComments(data); // Assuming you have a state variable for this
+  //       })
+  //       .catch(error => console.error('Error fetching comments:', error));
+  // }, [venueId]);
 
 //Nav Bar Search based on back-end search-venues
   const [navSearchTerm, setNavSearchTerm] = useState('');
@@ -305,12 +310,13 @@ const handleLocationFetch = () => {
 
   useEffect(() => {
     if (navSearchTerm) {
-        fetch(`http://localhost:3001/search-venues?keyword=${navSearchTerm}`)
-            .then(response => response.json())
-            .then(data => setNavSearchResult(data))
-            .catch(error => console.error(error));
-    } else {
-        setNavSearchResult([]);
+      fetch(`http://localhost:3001/search-venues?keyword=${navSearchTerm}`)
+      .then(response => response.json())
+      .then(data => setNavSearchResult(data))
+      .catch(error => console.error(error));
+    } 
+    else {
+      setNavSearchResult([]);
     }
   }, [navSearchTerm]);
   
@@ -320,16 +326,16 @@ const handleLocationFetch = () => {
 
   useEffect(() => {
     if (userInfo) {
-    const userId = userInfo.id; // Get user ID from userInfo
-    fetch(`http://localhost:3001/user/favorites?userId=${userId}`)
-        .then(response => response.json())
-        .then(data => {
-            const isFav = data.favorites.some(favVenue => favVenue.venueId == venueId);
-            setFavourites(data.favorites);
-            setIsFavourite(isFav);
-        })
-        .catch(error => console.error(error));
-      }
+      const userId = userInfo.id; // Get user ID from userInfo
+      fetch(`http://localhost:3001/user/favorites?userId=${userId}`)
+      .then(response => response.json())
+      .then(data => {
+        const isFav = data.favorites.some(favVenue => favVenue.venueId == venueId);
+        setFavourites(data.favorites);
+        setIsFavourite(isFav);
+      })
+      .catch(error => console.error(error));
+    }
   }, [venueId, userInfo]);
 
   // const handleFavouriteClick = () => {
@@ -349,65 +355,64 @@ const handleLocationFetch = () => {
   const handleFavouriteClick = () => {
     const userId = userInfo.id; // Retrieve user ID from userInfo
     const url = isFavourite 
-        ? `http://localhost:3001/user/favorites/${venueId}?userId=${userId}`
-        : `http://localhost:3001/user/favorites/${venueId}`;
+      ? `http://localhost:3001/user/favorites/${venueId}?userId=${userId}`
+      : `http://localhost:3001/user/favorites/${venueId}`;
 
     const options = {
-        method: isFavourite ? 'DELETE' : 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: userId }) // Include user ID in the body for POST request
+      method: isFavourite ? 'DELETE' : 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: userId }) // Include user ID in the body for POST request
     };
 
     // For DELETE request, remove body
     if (isFavourite) delete options.body;
 
     fetch(url, options)
-        .then(response => response.json())
-        .then(data => {
-            setFavourites(data.favorites);
-            setIsFavourite(!isFavourite);
-        })
-        .catch(error => console.error(error));
-};
+    .then(response => response.json())
+    .then(data => {
+      setFavourites(data.favorites);
+      setIsFavourite(!isFavourite);
+    })
+    .catch(error => console.error(error));
+  };
 
-const unfavoriteVenue = (venueId) => {
-  const userId = userInfo.id;
-  fetch(`http://localhost:3001/user/favorites/${venueId}?userId=${userId}`, { method: 'DELETE' })
-      .then(response => response.json())
-      .then(data => {
-          setFavourites(data.favorites); // Update the state with the new favorites list
-          setIsFavourite(false); // Update the favorite status
-      })
-      .catch(error => console.error(error));
-};
+  const unfavoriteVenue = (venueId) => {
+    const userId = userInfo.id;
+    fetch(`http://localhost:3001/user/favorites/${venueId}?userId=${userId}`, { method: 'DELETE' })
+    .then(response => response.json())
+    .then(data => {
+      setFavourites(data.favorites); // Update the state with the new favorites list
+      setIsFavourite(false); // Update the favorite status
+    })
+    .catch(error => console.error(error));
+  };
 
-const fetchComments = () => {
-  // Check if venueId is valid before fetching comments
-  if (!venueId || venueId === "") {
+  const fetchComments = () => {
+    // Check if venueId is valid before fetching comments
+    if (!venueId || venueId === "") {
       console.log('No valid venueId provided');
       return; // Exit the function if venueId is not valid
-  }
+    }
 
-  fetch(`http://localhost:3001/venue/${venueId}/comments`)
-      .then(response => response.json())
-      .then(data => {
-          setVenueComments(data);
-      })
-      .catch(error => console.error('Error fetching comments:', error));
-};
+    fetch(`http://localhost:3001/venue/${venueId}/comments`)
+    .then(response => response.json())
+    .then(data => {
+      setVenueComments(data);
+    })
+    .catch(error => console.error('Error fetching comments:', error));
+  };
 
-useEffect(() => {
-  fetchComments();
-}, [venueId]); // Fetch comments when venueId changes and is valid
+  useEffect(() => {
+    fetchComments();
+  }, [venueId]); // Fetch comments when venueId changes and is valid
 
-const [priceInput, setPriceInput] = useState('');
+  const [priceInput, setPriceInput] = useState('');
 
  //after login. if user not admin then return this:
 
   //should be logout instead of login, as user need auth. to view the content, when they see this page, they already login
   return (
     <div className="Location">
-
       <Navbar bg="light" expand="lg">
         <Navbar.Brand className="ms-3" href="#" onClick={handleShow}>☰☰</Navbar.Brand>
         <Form inline className="me-auto" style={{width: "52%", minWidth: "250px", maxWidth: "600px"}}>
@@ -415,9 +420,9 @@ const [priceInput, setPriceInput] = useState('');
           {/*Show the search result in a list after entering a keyword, click the location to navagate */}
           <ListGroup style={{ position: 'absolute', zIndex:10}}>
             {navSearchResult.map((result, index) => (
-                <Link to={`http://localhost:3000/location/${result.venueId}`} key={index} onClick={handleNavLinkClick}>
-                    <ListGroup.Item>{result.venueNameE}</ListGroup.Item>
-                </Link>
+              <Link to={`http://localhost:3000/location/${result.venueId}`} key={index} onClick={handleNavLinkClick}>
+                  <ListGroup.Item>{result.venueNameE}</ListGroup.Item>
+              </Link>
             ))}
           </ListGroup>
         </Form>
@@ -480,26 +485,24 @@ const [priceInput, setPriceInput] = useState('');
       </Offcanvas>
 
       <Offcanvas show={profileIsOpen} onHide={handleProfileClose} placement={'end'} style={{width: profileWidth}}>
-    <Offcanvas.Header closeButton>
-        <Offcanvas.Title>Profile</Offcanvas.Title>
-    </Offcanvas.Header>
-    <Offcanvas.Body>
-        <h5>Username: {userInfo ? userInfo.username : 'Guest'}</h5>
-        <h3>Favourites</h3>
-        <ListGroup>
+        <Offcanvas.Header closeButton>
+          <Offcanvas.Title>Profile</Offcanvas.Title>
+        </Offcanvas.Header>
+        <Offcanvas.Body>
+          <h5>Username: {userInfo ? userInfo.username : 'Guest'}</h5>
+          <h3>Favourites</h3>
+          <ListGroup>
             {Array.isArray(favourites) && favourites.map((favourite, index) => (
-                <ListGroup.Item key={index} className="d-flex justify-content-between align-items-center">
-                    {favourite.venueNameE} {/* Assuming venueNameE is the name field */}
-                    <Button variant="outline-danger" size="sm" onClick={() => unfavoriteVenue(favourite.venueId)}>
-                        Unfavorite
-                    </Button>
-                </ListGroup.Item>
+              <ListGroup.Item key={index} className="d-flex justify-content-between align-items-center">
+                {favourite.venueNameE} {/* Assuming venueNameE is the name field */}
+                <Button variant="outline-danger" size="sm" onClick={() => unfavoriteVenue(favourite.venueId)}>
+                  Unfavorite
+                </Button>
+              </ListGroup.Item>
             ))}
-        </ListGroup>
-    </Offcanvas.Body>
-</Offcanvas>
-
-
+          </ListGroup>
+        </Offcanvas.Body>
+      </Offcanvas>
 
       <Stack direction="horizontal" gap={3}>
         <DropdownButton
@@ -523,64 +526,70 @@ const [priceInput, setPriceInput] = useState('');
             <Dropdown.Item eventKey="Exactly">Exactly</Dropdown.Item>
           </DropdownButton>
           <FormControl 
-    placeholder="$" 
-    aria-label="price-filter-input-field"
-    value={priceInput}
-    onChange={(e) => setPriceInput(e.target.value)}
-/>
+            placeholder="$" 
+            aria-label="price-filter-input-field"
+            value={priceInput}
+            onChange={(e) => setPriceInput(e.target.value)}
+          />
         </InputGroup>
       </Stack>
       
       <Container fluid>
-          <MapContainer locations={venuesData} selectedVenueCoords={selectedVenueCoords} />
+        <MapContainer locations={venuesData} selectedVenueCoords={selectedVenueCoords} />
       </Container>
       <Container fluid className="mx-3 pb-4 bg-light">
           {locationData && locationData.venue && locationData.events && (
             <div>
-              <h3 className="my-2 pt-2 fw-bold">{locationData.venue.venueNameE}</h3>
-              <Button className="mx-3" variant="outline-danger" onClick={handleFavouriteClick} >
-                 {isFavourite ? <HeartFill size={24} /> : <Heart size={24} />}
-              </Button>
-              {/* <p>Description of location here</p>
-              <p>someone set up the google maps api please</p>
-              <p>Someone help me put the favorite icon in a better position^</p> */}
-                {locationData.events.map((event, index) => (
-                    <Container className="ms-3" key={index}>
-                        <h4 className="mt-4 fw-bold">Events:</h4>
-                        <Container className="ms-2">
-                            <p>Title: {event.titleE}</p>
-                            <p>Venue: {locationData.venue.venueNameE}</p>
-                            <p>Date & Time: {event.date}</p>
-                            <p>Description: {event.descriptionE}</p>
-                            <p>Presenter: {event.presenterE}</p>
-                            <p>Price: {event.price}</p>
-                        </Container>
+              <row>
+                <Button className="mt-2 mx-3" variant="outline-danger" onClick={handleFavouriteClick} >
+                  {isFavourite ? <HeartFill size={24} /> : <Heart size={24} />}
+                </Button>
+                <h2 className="my-2 pt-2 fw-bold">{locationData.venue.venueNameE}</h2>
+              </row>
+              <h4 className="mt-4 fw-bold">Events:</h4>
+              {locationData.events.map((event, index) => (
+                <Container className="mt-2 ms-3" key={index}>   
+                  <Button className='fw-bolder'
+                    variant="outline-success"
+                    onClick={() => handleCollapseClick(index)}
+                    aria-controls="collapse-text"
+                    aria-expanded={collapseOpen[index]}
+                  >
+                    {event.titleE}
+                  </Button>
+                  {collapseOpen [index] && (
+                    <Container className="ms-2">    
+                      <p className='mt-2'><strong>Venue:</strong> {locationData.venue.venueNameE}</p>
+                      <p><strong>Date & Time:</strong> {event.date}</p>
+                      <p><strong>Description:</strong> {event.descriptionE}</p>
+                      <p><strong>Presenter:</strong> {event.presenterE}</p>
+                      <p><strong>Price:</strong> {event.price}</p>
                     </Container>
-
-                ))}
-                <Container fluid className="border bg-secondary text-light">
-                    <Row>
-                        <h4 className="my-2 fw-bold">Comments:</h4>
-                        {venueComments && venueComments.map(comment => (
-                            <Row key={comment._id}>
-                                <p>{comment.user.username}: {comment.content}</p>
-                            </Row>
-                        ))}
-                    </Row>
-                    <Form>
-    <Form.Group>
-        <Form.Label>Add a Comment</Form.Label>
-        <Form.Control 
-            as="textarea" 
-            rows={3} 
-            value={newComment} 
-            onChange={(e) => setNewComment(e.target.value)}
-        />
-    </Form.Group>
-    <Button onClick={handleAddComment}>Submit Comment</Button>
-</Form>
+                  )}
                 </Container>
-              
+              ))}
+              <Container fluid className="mt-3 border bg-secondary text-light">
+                <Row>
+                    <h4 className="my-2 fw-bold">Comments:</h4>
+                    {venueComments && venueComments.map(comment => (
+                      <Row key={comment._id}>
+                          <p>{comment.user.username}: {comment.content}</p>
+                      </Row>
+                    ))}
+                </Row>
+                <Form>
+                  <Form.Group>
+                    <Form.Label>Add a Comment</Form.Label>
+                    <Form.Control 
+                      as="textarea" 
+                      rows={3} 
+                      value={newComment} 
+                      onChange={(e) => setNewComment(e.target.value)}
+                    />
+                  </Form.Group>
+                  <Button className="mt-2 mb-3" onClick={handleAddComment}>Submit Comment</Button>
+                </Form>
+              </Container>
             </div>
           )}
       </Container>

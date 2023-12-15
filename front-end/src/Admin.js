@@ -38,13 +38,17 @@ const Admin = () => {
   };
 
   const getAuthHeader = () => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+    console.log("Token from storage:", token); // for debugging
     if (token) {
       return { Authorization: `Bearer ${token}` };
     } else {
+      console.error("Token not found in storage");
       return {};
     }
   };
+  
+  
 
 
   // Event management methods

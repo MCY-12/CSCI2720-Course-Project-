@@ -21,12 +21,12 @@ const Login = ({ setIsLoggedIn, setIsAdmin }) => {
         if (response.data.token) {
             // If 'Remember Me' is checked, use localStorage
             if (rememberMe) {
-                localStorage.setItem('token', response.data.token);
-                localStorage.setItem('userInfo', JSON.stringify(response.data.user));
+              localStorage.setItem('token', response.data.token);
+              localStorage.setItem('userInfo', JSON.stringify(response.data.user));
             } else {
-                // If not, use sessionStorage
-                sessionStorage.setItem('token', response.data.token);
-                sessionStorage.setItem('userInfo', JSON.stringify(response.data.user));
+              // If not, use sessionStorage
+              sessionStorage.setItem('token', response.data.token);
+              sessionStorage.setItem('userInfo', JSON.stringify(response.data.user));
             }
             setIsLoggedIn(true);
             if (response.data.user.isAdmin) {
@@ -70,16 +70,16 @@ const Login = ({ setIsLoggedIn, setIsAdmin }) => {
           <Form>
             {/* Username input */}
             <Form.Group className="mb-3" controlId="formBasicUsername">
-              
-                <Form.Label>Username:</Form.Label>
-                <Form.Control 
-                  type="text"
-                  placeholder="Enter your username"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  style={{textAlign: "center"}}
-                />
-              
+            
+              <Form.Label>Username:</Form.Label>
+              <Form.Control 
+                type="text"
+                placeholder="Enter your username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                style={{textAlign: "center"}}
+              />
+            
             </Form.Group>
 
             {/* Password input */}
@@ -92,12 +92,12 @@ const Login = ({ setIsLoggedIn, setIsAdmin }) => {
                 onChange={(e) => setPassword(e.target.value)}
                 style={{textAlign: "center"}}
               />
-              <Form.Check 
-    type="checkbox" 
-    label="Remember me" 
-    checked={rememberMe} 
-    onChange={handleRememberMeChange} 
-/>
+              <Form.Check className='mx-auto' 
+                type="checkbox" 
+                label="Remember me" 
+                checked={rememberMe} 
+                onChange={handleRememberMeChange} 
+              />
             </Form.Group>
 
             {/* Login register */}
