@@ -23,9 +23,20 @@ const Admin = () => {
     password: '',
   });
 
+  // State for venues
+  const [venues, setVenues] = useState([]);
+  const [newVenue, setNewVenue] = useState({
+    venueId: '',
+    venueNameE: '',
+    latitude: '',
+    longitude: '',
+  });
+
+
   useEffect(() => {
     fetchEvents();
     fetchUsers();
+    fetchVenues();
   }, []);
 
 
@@ -39,7 +50,7 @@ const Admin = () => {
     sessionStorage.removeItem('token');
     sessionStorage.removeItem('userInfo');
     navigate('/'); // Redirect to the login page
-  };
+  };
 
   const getAuthHeader = () => {
     const token = localStorage.getItem('token') || sessionStorage.getItem('token');
@@ -180,6 +191,63 @@ const Admin = () => {
     }
   };
 
+  // Venues
+  const fetchVenues = async () => {
+    try {
+      const response = await axios.get('http://localhost:3001/admin/shows', { headers: getAuthHeader() });
+      setVenues(response.data);
+    } catch (error) {
+      console.error('Error fetching venues:', error);
+    }
+  };
+  const handleInputVenueChange = (e) => {
+    const { name, value } = e.target;
+    setNewVenue((prevVenue) => ({
+      ...prevVenue,
+      [name]: value,
+    }));
+  };
+  const handleCreateVenue = async () => {
+    try {
+      await axios.post('http://localhost:3001/admin/show', newVenue, { headers: getAuthHeader() });
+      fetchVenues();
+      setNewVenue({
+        venueId: '',
+        venueNameE: '',
+        latitude: '',
+        longitude: '',
+      });
+    } catch (error) {
+      console.error('Error creating venue:', error);
+    }
+  };
+  const handleUpdateVenue = async (venueId) => {
+    try {
+      await axios.put(`http://localhost:3001/admin/show/${venueId}`, newVenue, { headers: getAuthHeader() });
+      fetchVenues();
+      setNewVenue({
+        venueId: '',
+        venueNameE: '',
+        latitude: '',
+        longitude: '',
+      });
+    } catch (error) {
+      console.error('Error updating venue:', error);
+    }
+  };
+  const handleDeleteVenue = async (venueId) => {
+    try {
+      await axios.delete(`http://localhost:3001/admin/show/${venueId}`, { headers: getAuthHeader() });
+      fetchVenues();
+    } catch (error) {
+      console.error('Error deleting venue:', error);
+    }
+  };
+
+
+
+
+
   // Component render
   return (
     <Container fluid className="py-4">
@@ -191,7 +259,7 @@ const Admin = () => {
           <h3 className='fw-bold'>Admin Page</h3>
         </Col>
       </Row>
-      <hr/>
+      <hr />
 
       <Card className="mb-4">
         <Card.Body>
@@ -236,7 +304,7 @@ const Admin = () => {
             <Form.Group as={Row} className="mb-3">
               <Form.Label column sm={2}>Price:</Form.Label>
               <Col sm={10}>
-                <Form.Control type="text" name="price" value={newEvent.price} onChange={handleInputEventChange}/>
+                <Form.Control type="text" name="price" value={newEvent.price} onChange={handleInputEventChange} />
               </Col>
             </Form.Group>
             <Button variant="success" className="mt-3 fw-bold" onClick={handleCreateEvent}>
@@ -323,6 +391,71 @@ const Admin = () => {
                   <td>
                     <Button variant="primary" className="me-1" onClick={() => handleUpdateUser(user._id)}>Update</Button>
                     <Button variant="outline-danger" onClick={() => handleDeleteUser(user._id)}>Delete</Button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </Table>
+        </Col>
+      </Row>
+
+      <Card className="mb-4">
+        <Card.Body>
+          <Card.Title className='fw-bold fs-3'>Venue Management</Card.Title>
+          <Form className='pt-3 ps-3'>
+            <Form.Group as={Row} className="mb-3">
+              <Form.Label column sm={2}>Venue ID:</Form.Label>
+              <Col sm={10}>
+                <Form.Control type="text" name="venueId" value={newVenue.venueId} onChange={handleInputVenueChange} />
+              </Col>
+            </Form.Group>
+            <Form.Group as={Row} className="mb-3">
+              <Form.Label column sm={2}>Venue Name:</Form.Label>
+              <Col sm={10}>
+                <Form.Control type="text" name="venueNameE" value={newVenue.venueNameE} onChange={handleInputVenueChange} />
+              </Col>
+            </Form.Group>
+            <Form.Group as={Row} className="mb-3">
+              <Form.Label column sm={2}>Latitude:</Form.Label>
+              <Col sm={10}>
+                <Form.Control type="text" name="latitude" value={newVenue.latitude} onChange={handleInputVenueChange} />
+              </Col>
+            </Form.Group>
+            <Form.Group as={Row} className="mb-3">
+              <Form.Label column sm={2}>Longitude:</Form.Label>
+              <Col sm={10}>
+                <Form.Control type="text" name="longitude" value={newVenue.longitude} onChange={handleInputVenueChange} />
+              </Col>
+            </Form.Group>
+            <Button variant="success" className="mt-3 fw-bold" onClick={handleCreateVenue}>
+              Create Venue
+            </Button>
+          </Form>
+        </Card.Body>
+      </Card>
+
+      <Row>
+        <Col>
+          <Table striped bordered hover responsive>
+            <thead>
+              <tr>
+                <th>Venue ID</th>
+                <th>Name</th>
+                <th>Latitude</th>
+                <th>Longitude</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {venues.map((venue) => (
+                <tr key={venue._id}>
+                  <td>{venue.venueId}</td>
+                  <td>{venue.venueNameE}</td>
+                  <td>{venue.latitude}</td>
+                  <td>{venue.longitude}</td>
+                  <td>
+                    <Button variant="primary" className="mb-1" onClick={() => handleUpdateVenue(venue._id)}>Update</Button>
+                    <Button variant="outline-danger" onClick={() => handleDeleteVenue(venue._id)}>Delete</Button>
                   </td>
                 </tr>
               ))}
