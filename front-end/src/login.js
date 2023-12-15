@@ -16,12 +16,14 @@ const Login = ({ setIsLoggedIn, setIsAdmin }) => {
         setMessage(response.data.message);
         if (response.data.token) {
             localStorage.setItem('token', response.data.token);
-            localStorage.setItem('userInfo', JSON.stringify(response.data.user)); // Store user info
+            localStorage.setItem('userInfo', JSON.stringify(response.data.user));
             setIsLoggedIn(true);
-            if (response.data.user) {
-                setIsAdmin(response.data.user.isAdmin);
+            if (response.data.user.isAdmin) {
+                setIsAdmin(true);
+                navigate('/admin'); // Navigate to Admin page for admins
+            } else {
+                navigate('/location'); // Navigate to Location page for regular users
             }
-            navigate('/location'); // Assuming 'navigate' is a function from a routing library like React Router
         } else {
             setError(true);
         }
@@ -30,9 +32,9 @@ const Login = ({ setIsLoggedIn, setIsAdmin }) => {
         setError(true);
         const errorMessage = error.response?.data?.message || error.message;
         setMessage("Error during login: " + errorMessage);
-        console.error('Error:', error);
     });
 };
+
 
   
   const handleRegister = async () => {
