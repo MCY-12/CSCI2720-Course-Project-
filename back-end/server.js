@@ -452,13 +452,17 @@ app.get('/user/favorites', async (req, res) => {
 });
 
 function extractPrices(priceString) {
-    // Check if the price string contains '$'
-    if (!priceString.includes('$')) {
-        return [0]; // If no '$' symbol, return [0]
+    // Regular expression to find numbers that directly follow a '$'
+    const regex = /\$(\d+)/g;
+    const prices = [];
+
+    let match;
+    while ((match = regex.exec(priceString)) !== null) {
+        // match[1] contains the number part of each "$<number>" match
+        prices.push(Number(match[1]));
     }
 
-    const prices = priceString.match(/\d+/g) || [];
-    return prices.map(Number);
+    return prices.length > 0 ? prices : [0];
 }
 
 // Endpoint for events with price under a certain value
