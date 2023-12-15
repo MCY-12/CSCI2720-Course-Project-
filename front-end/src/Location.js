@@ -52,9 +52,9 @@ import { FilePerson, ForwardFill, FilterCircle, Heart, HeartFill } from 'react-b
 //   )
 // }
 
-import { GoogleMap, Marker } from "@react-google-maps/api";
+import { GoogleMap, MarkerF } from "@react-google-maps/api";
 
-const MapContainer = ({ locations, selectedVenueCoords }) => {
+const MapContainer = ({ locations, selectedVenueCoords, navigate }) => {
   const mapStyles = {        
       height: "400px",
       width: "100%"
@@ -73,9 +73,9 @@ const MapContainer = ({ locations, selectedVenueCoords }) => {
                   center={selectedVenueCoords || defaultCenter}
               >
                   {locations.map(item => (
-                      <Marker key={item.venueId}
+                      <MarkerF key={item.venueId}
                           position={{lat: parseFloat(item.latitude), lng: parseFloat(item.longitude)}}
-                          onClick={() => window.location.href=`/location/${item.venueId}`}
+                          onClick={() => navigate(`/location/${item.venueId}`)}
                       />
                   ))}
               </GoogleMap>
@@ -223,7 +223,13 @@ const handleLocationFetch = () => {
   };
     
   const handleAddComment = () => {
-    const token = localStorage.getItem('token'); // Retrieve the token
+        // First, try to get userInfo from localStorage
+        let token = localStorage.getItem('token');
+
+        // If not found in localStorage, try to get from sessionStorage
+        if (!token) {
+          token = sessionStorage.getItem('token');
+        }
     const commentData = {
       content: newComment,
       venueId: venueId
@@ -535,7 +541,7 @@ const handleLocationFetch = () => {
       </Stack>
       
       <Container fluid>
-        <MapContainer locations={venuesData} selectedVenueCoords={selectedVenueCoords} />
+        <MapContainer locations={venuesData} selectedVenueCoords={selectedVenueCoords} navigate={navigate} />
       </Container>
       <Container fluid className="mx-3 pb-4 bg-light">
           {locationData && locationData.venue && locationData.events && (
